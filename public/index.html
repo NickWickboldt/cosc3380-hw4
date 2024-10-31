@@ -9,11 +9,11 @@
   </head>
   <body>
     <h1 class="mainpage-header">Phone Company Dashbaord</h1>
-    <div class="user-container">
-      <div class="user-operations-container">
-        <div class="create-user">
-          <form action="/submit_user" method="post" id="create-user-form">
-            <h2>Create User</h2>
+    <div class="customer-container">
+      <div class="customer-operations-container">
+        <div class="create-customer">
+          <form action="/submit_customer" method="post" id="create-customer-form">
+            <h2>Create Customer</h2>
             <label for="first_name">First Name:</label><br />
             <input
               type="text"
@@ -40,18 +40,18 @@
               name="phone_number"
             /><br /><br />
 
-            <input type="submit" class="btn" value="Create User" />
+            <input type="submit" class="btn" value="Create customer" />
             <div id="statusMessage" style="display: none"></div>
           </form>
         </div>
-        <div class="update-user">
-          <form action="/update_user" method="put" id="update-user-form">
-            <h2>Update User</h2>
-            <label for="update_user_id">User ID:</label><br />
+        <div class="update-customer">
+          <form action="/update_customer" method="put" id="update-customer-form">
+            <h2>Update Customer</h2>
+            <label for="update_customer_id">Customer ID:</label><br />
             <input
               type="text"
-              id="update_user_id"
-              name="update_user_id"
+              id="update_customer_id"
+              name="update_customer_id"
               required
             /><br /><br />
 
@@ -86,29 +86,29 @@
               name="update_phone_number"
             /><br /><br />
 
-            <input type="submit" class="btn" value="Update User" />
+            <input type="submit" class="btn" value="Update customer" />
             <div id="update_statusMessage" style="display: none"></div>
           </form>
         </div>
-        <div class="delete-user">
-          <form action="/delete_user" method="delete" id="delete-user-form">
-            <h2>Delete User</h2>
-            <label for="delete_user_id">User ID:</label><br />
+        <div class="delete-customer">
+          <form action="/delete_customer" method="delete" id="delete-customer-form">
+            <h2>Delete Customer</h2>
+            <label for="delete_customer_id">customer ID:</label><br />
             <input
               type="text"
-              id="delete_user_id"
-              name="delete_user_id"
+              id="delete_customer_id"
+              name="delete_customer_id"
               required
             /><br /><br />
 
-            <input type="submit" class="btn" value="Delete User" />
+            <input type="submit" class="btn" value="Delete customer" />
             <div id="delete_statusMessage" style="display: none"></div>
           </form>
         </div>
       </div>
-      <div class="user-list">
-        <h2>Users List</h2>
-        <table id="usersTable" style="border: solid black 1px">
+      <div class="customer-list">
+        <h2>Customers List</h2>
+        <table id="customersTable" style="border: solid black 1px">
           <thead>
             <tr>
               <th>ID</th>
@@ -124,7 +124,7 @@
           </tbody>
         </table>
       </div>
-      <button class="delete-all-users btn">Delete All Users</button>
+      <button class="delete-all-customers btn">Delete All Customers</button>
     </div>
   </body>
 </html>

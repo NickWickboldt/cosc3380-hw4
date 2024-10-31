@@ -1,35 +1,35 @@
-const fetchUsers = async () => {
-  const response = await fetch('/users');
-  const users = await response.json()
+const fetchCustomers = async () => {
+  const response = await fetch("/customers");
+  const customers = await response.json()
 
-  const usersTableBody = document.querySelector('#usersTable tbody');
-  usersTableBody.innerHTML = ''; // Clear existing rows
+  const customersTableBody = document.querySelector('#customersTable tbody');
+  customersTableBody.innerHTML = ''; // Clear existing rows
 
-  users.forEach(user => {
+  customers.forEach(customer => {
     const row = document.createElement('tr');
 
-    // Create and append table cells for each user attribute
+    // Create and append table cells for each customer attribute
     row.innerHTML = `
-      <td>${user.id}</td>
-      <td>${user.first_name}</td>
-      <td>${user.last_name}</td>
-      <td>${user.email}</td>
-      <td>${user.phone_number || 'N/A'}</td>
-      <td>${new Date(user.created_at).toLocaleString()}</td>
+      <td>${customer.customer_id}</td>
+      <td>${customer.first_name}</td>
+      <td>${customer.last_name}</td>
+      <td>${customer.email}</td>
+      <td>${customer.phone_number || 'N/A'}</td>
+      <td>${new Date(customer.created_at).toLocaleString()}</td>
     `;
-    usersTableBody.appendChild(row);
+    customersTableBody.appendChild(row);
   });
 
 }
 
-document.getElementById('create-user-form').addEventListener('submit', async function(event) {
+document.getElementById('create-customer-form').addEventListener('submit', async function(event) {
   event.preventDefault(); // Prevent default form submission
 
   const formData = new FormData(this);
   const formObject = Object.fromEntries(formData.entries());
 
   try {
-    const response = await fetch('/submit_user', {
+    const response = await fetch('/submit_customer', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -39,14 +39,14 @@ document.getElementById('create-user-form').addEventListener('submit', async fun
 
     if (response.ok) {
       document.getElementById('statusMessage').style.display = "block";
-      document.getElementById('statusMessage').innerText = 'User created!';
+      document.getElementById('statusMessage').innerText = 'Customer created!';
       this.reset(); 
-      fetchUsers()
+      fetchCustomers()
       setTimeout(() => {
         document.getElementById('statusMessage').style.display = "none"
       }, 2000)
     } else {
-      document.getElementById('statusMessage').innerText = 'Failed to create user.';
+      document.getElementById('statusMessage').innerText = 'Failed to create customer.';
     }
   } catch (error) {
     console.error('Error:', error);
@@ -54,52 +54,52 @@ document.getElementById('create-user-form').addEventListener('submit', async fun
   }
 });
 
-document.getElementById('update-user-form').addEventListener('submit', async function(event){
+document.getElementById('update-customer-form').addEventListener('submit', async function(event){
   event.preventDefault()
 
   const formData = new FormData(this);
   const formObject = Object.fromEntries(formData.entries());
   try{
-    const response = await fetch(`/update_user/${formObject.update_user_id}`, {
+    const response = await fetch(`/update_customer/${formObject.update_customer_id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formObject)
     })
     if (response.ok) {
-      fetchUsers()
+      fetchCustomers()
       document.getElementById('update_statusMessage').style.display = "block"; 
-      document.getElementById('update_statusMessage').innerText = 'User updated!';
+      document.getElementById('update_statusMessage').innerText = 'Customer updated!';
       this.reset(); 
       setTimeout(() => {
         document.getElementById('update_statusMessage').style.display = "none"
       }, 2000)
     } else {
-      document.getElementById('update_statusMessage').innerText = 'Failed to update user.';
+      document.getElementById('update_statusMessage').innerText = 'Failed to update customer.';
     }
   } catch (error) {
   console.error('Error:', error);
   document.getElementById('update_statusMessage').innerText = 'An error occurred. Please try again.';
 }
 })
-document.getElementById('delete-user-form').addEventListener('submit', async function(event){
+document.getElementById('delete-customer-form').addEventListener('submit', async function(event){
   event.preventDefault();
   const formData = new FormData(this);
   const formObject = Object.fromEntries(formData.entries());
   try{
-    const response = await fetch(`/delete_user/${formObject.delete_user_id}`, {
+    const response = await fetch(`/delete_customer/${formObject.delete_customer_id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
     })
     if (response.ok) {
-      fetchUsers()
+      fetchCustomers()
       document.getElementById('delete_statusMessage').style.display = "block"; 
-      document.getElementById('delete_statusMessage').innerText = 'User deleted!';
+      document.getElementById('delete_statusMessage').innerText = 'Customer deleted!';
       this.reset(); 
       setTimeout(() => {
         document.getElementById('delete_statusMessage').style.display = "none"
       }, 2000)
     } else {
-      document.getElementById('delete_statusMessage').innerText = 'Failed to delete user.';
+      document.getElementById('delete_statusMessage').innerText = 'Failed to delete customer.';
     }
   } catch (error){
     console.error('Error:', error);
@@ -108,21 +108,21 @@ document.getElementById('delete-user-form').addEventListener('submit', async fun
 
 })
 
-document.querySelector(".delete-all-users").addEventListener('click', async () => {
+document.querySelector(".delete-all-customers").addEventListener('click', async () => {
   try{
-    const response = await fetch(`/delete_all_users/`, {
+    const response = await fetch(`/delete_all_customers/`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
     })
     if (response.ok) {
-      fetchUsers()
+      fetchCustomers()
       document.getElementById('delete_statusMessage').style.display = "block"; 
-      document.getElementById('delete_statusMessage').innerText = 'All users deleted successfully!';
+      document.getElementById('delete_statusMessage').innerText = 'All customers deleted successfully!';
       setTimeout(() => {
         document.getElementById('delete_statusMessage').style.display = "none"
       }, 2000)
     } else {
-      document.getElementById('delete_statusMessage').innerText = 'Failed to delete all users.';
+      document.getElementById('delete_statusMessage').innerText = 'Failed to delete all customers.';
     }
   } catch (error){
     console.error('Error:', error);
@@ -131,5 +131,5 @@ document.querySelector(".delete-all-users").addEventListener('click', async () =
 })
 
 window.onload = () => {
-  fetchUsers()
+  fetchCustomers()
 }

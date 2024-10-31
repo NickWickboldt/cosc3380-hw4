@@ -11,7 +11,7 @@
   padding:0.5vmin;
 }
 
-.user-container{
+.customer-container{
   margin-top:5vmin;
   width: 100%;
   height: fit-content;
@@ -20,7 +20,7 @@
   align-items: center;
 }
 
-.user-operations-container{
+.customer-operations-container{
   background-color: aliceblue;
   width: 90%;
   padding: 1vmin;
@@ -30,7 +30,7 @@
   column-gap: 5%;
 }
 
-.create-user, .update-user, .delete-user{
+.create-customer, .update-customer, .delete-customer{
   border: solid black 1px;
   min-width: 10vmin;
   display: flex;
@@ -40,7 +40,7 @@
   min-height: 35vmin;
 }
 
-#create-user-form > h2, #update-user-form > h2, #delete-user-form > h2{
+#create-customer-form > h2, #update-customer-form > h2, #delete-customer-form > h2{
   margin-bottom: 1vmin;
 }
 
@@ -52,22 +52,22 @@
   border-radius: 0.5vmin;
 }
 
-.delete-all-users{
+.delete-all-customers{
   margin-top:5vmin;
 }
 
-.user-list{
+.customer-list{
   width: 90%;
   background-color: aliceblue;
   padding:1vmin;
   margin-top: 5vmin;
 }
 
-#usersTable{
+#customersTable{
   width:100%;
 }
 
-#usersTable th, #usersTable td{
+#customersTable th, #customersTable td{
   padding:0.3vmin;
   border-radius: 1vmin;
   
