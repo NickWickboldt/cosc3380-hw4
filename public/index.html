@@ -40,7 +40,21 @@
               name="phone_number"
             /><br /><br />
 
-            <input type="submit" class="btn" value="Create customer" />
+            <label for="account_number">Bank Account Number:</label><br />
+            <input
+              id="account_number"
+              name="account_number"
+            /><br /><br />
+
+            <label for="plan_id">Phone Plan:</label><br />
+            <select name="plan_id" id="plan_id" >
+              <option value="Plan 1">Plan 1</option>
+              <option value="Plan 2">Plan 2</option>
+              <option value="Plan 3">Plan 3</option>
+              <option value="Plan 4">Plan 4</option>
+            </select><br><br>
+
+            <input type="submit" class="btn" value="Create Customer" />
             <div id="statusMessage" style="display: none"></div>
           </form>
         </div>
@@ -86,14 +100,28 @@
               name="update_phone_number"
             /><br /><br />
 
-            <input type="submit" class="btn" value="Update customer" />
+            <label for="update_account_number">Bank Account Number:</label><br />
+            <input
+              id="update_account_number"
+              name="update_account_number"
+            /><br /><br />
+
+            <label for="update_plan_id">Phone Plan:</label><br />
+            <select name="update_plan_id" id="update_plan_id" >
+              <option value="Plan 1">Plan 1</option>
+              <option value="Plan 2">Plan 2</option>
+              <option value="Plan 3">Plan 3</option>
+              <option value="Plan 4">Plan 4</option>
+            </select><br><br>
+
+            <input type="submit" class="btn" value="Update Customer" />
             <div id="update_statusMessage" style="display: none"></div>
           </form>
         </div>
         <div class="delete-customer">
           <form action="/delete_customer" method="delete" id="delete-customer-form">
             <h2>Delete Customer</h2>
-            <label for="delete_customer_id">customer ID:</label><br />
+            <label for="delete_customer_id">Customer ID:</label><br />
             <input
               type="text"
               id="delete_customer_id"
@@ -117,6 +145,40 @@
               <th>Email</th>
               <th>Phone Number</th>
               <th>Created At</th>
+              <th>Bank Account Number</th>
+              <th>Plan ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JavaScript will populate this -->
+          </tbody>
+        </table>
+      </div>
+      <div class="bank-list">
+        <h2>Bank Table List</h2>
+        <table id="bankTable" style="border: solid black 1px">
+          <thead>
+            <tr>
+              <th>Account Number</th>
+              <th>Balance</th>
+              <th>Bank Name</th>
+              <th>Bank Log</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JavaScript will populate this -->
+          </tbody>
+        </table>
+      </div>
+      <div class="phone-plan-list">
+        <h2>Phone Plan Table List</h2>
+        <table id="phonePlanTable" style="border: solid black 1px">
+          <thead>
+            <tr>
+              <th>Plan ID</th>
+              <th>Data Type</th>
+              <th>Call Minutes</th>
+              <th>Plan Name</th>
             </tr>
           </thead>
           <tbody>

@@ -37,7 +37,7 @@
   flex-direction: column;
   align-items: center;
   padding:1vmin;
-  min-height: 35vmin;
+  min-height: 45vmin;
 }
 
 #create-customer-form > h2, #update-customer-form > h2, #delete-customer-form > h2{
@@ -56,19 +56,24 @@
   margin-top:5vmin;
 }
 
-.customer-list{
+.customer-list, .bank-list, .phone-plan-list{
   width: 90%;
   background-color: aliceblue;
   padding:1vmin;
   margin-top: 5vmin;
 }
 
-#customersTable{
+#customersTable, #bankTable, #phonePlanTable{
   width:100%;
+  text-align: left;
 }
 
 #customersTable th, #customersTable td{
   padding:0.3vmin;
   border-radius: 1vmin;
   
+}
+
+#plan_id, #update_plan_id{
+  width: 100%;
 }

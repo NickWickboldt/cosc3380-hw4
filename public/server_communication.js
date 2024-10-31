@@ -3,7 +3,7 @@ const fetchCustomers = async () => {
   const customers = await response.json()
 
   const customersTableBody = document.querySelector('#customersTable tbody');
-  customersTableBody.innerHTML = ''; // Clear existing rows
+  customersTableBody.innerHTML = '';
 
   customers.forEach(customer => {
     const row = document.createElement('tr');
@@ -16,10 +16,52 @@ const fetchCustomers = async () => {
       <td>${customer.email}</td>
       <td>${customer.phone_number || 'N/A'}</td>
       <td>${new Date(customer.created_at).toLocaleString()}</td>
+      <td>${customer.account_number}</td>
+      <td>${customer.plan_id}</td>
     `;
     customersTableBody.appendChild(row);
   });
 
+}
+
+const fetchBanks = async () => {
+  const response = await fetch("/banks");
+  const banks = await response.json()
+
+  const banktableBody = document.querySelector("#bankTable tbody");
+  banktableBody.innerHTML = '';
+
+  banks.forEach(bank => {
+    const row = document.createElement('tr');
+
+    row.innerHTML = `
+      <td>${bank.account_number}</td>
+      <td>${bank.balance}</td>
+      <td>${bank.bank_name}</td>
+      <td>${bank.bank_log}</td>
+    `;
+    banktableBody.appendChild(row);
+  });
+}
+
+const fetchPhonePlans = async () => {
+  const response = await fetch("/phone_plans");
+  const phonePlans = await response.json()
+
+  const phonePlanstableBody = document.querySelector("#phonePlanTable tbody");
+  phonePlanstableBody.innerHTML = '';
+
+  phonePlans.forEach(plan => {
+    const row = document.createElement('tr');
+
+    row.innerHTML = `
+      <td>${plan.plan_id}</td>
+      <td>${plan.data_type}</td>
+      <td>${plan.call_minutes}</td>
+      <td>${plan.plan_name}</td>
+    `;
+    phonePlanstableBody.appendChild(row);
+  });
 }
 
 document.getElementById('create-customer-form').addEventListener('submit', async function(event) {
@@ -41,7 +83,7 @@ document.getElementById('create-customer-form').addEventListener('submit', async
       document.getElementById('statusMessage').style.display = "block";
       document.getElementById('statusMessage').innerText = 'Customer created!';
       this.reset(); 
-      fetchCustomers()
+      updateTables()
       setTimeout(() => {
         document.getElementById('statusMessage').style.display = "none"
       }, 2000)
@@ -66,7 +108,7 @@ document.getElementById('update-customer-form').addEventListener('submit', async
       body: JSON.stringify(formObject)
     })
     if (response.ok) {
-      fetchCustomers()
+      updateTables()
       document.getElementById('update_statusMessage').style.display = "block"; 
       document.getElementById('update_statusMessage').innerText = 'Customer updated!';
       this.reset(); 
@@ -91,7 +133,7 @@ document.getElementById('delete-customer-form').addEventListener('submit', async
       headers: { 'Content-Type': 'application/json' },
     })
     if (response.ok) {
-      fetchCustomers()
+      updateTables()
       document.getElementById('delete_statusMessage').style.display = "block"; 
       document.getElementById('delete_statusMessage').innerText = 'Customer deleted!';
       this.reset(); 
@@ -115,7 +157,7 @@ document.querySelector(".delete-all-customers").addEventListener('click', async 
       headers: { 'Content-Type': 'application/json' },
     })
     if (response.ok) {
-      fetchCustomers()
+      updateTables()
       document.getElementById('delete_statusMessage').style.display = "block"; 
       document.getElementById('delete_statusMessage').innerText = 'All customers deleted successfully!';
       setTimeout(() => {
@@ -130,6 +172,12 @@ document.querySelector(".delete-all-customers").addEventListener('click', async 
   }
 })
 
-window.onload = () => {
+const updateTables = () => {
   fetchCustomers()
+  fetchBanks()
+  fetchPhonePlans()
+}
+
+window.onload = () => {
+  updateTables()
 }
