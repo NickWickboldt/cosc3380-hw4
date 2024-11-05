@@ -94,3 +94,11 @@
 #monthlyRevenueContainer p{
   margin: 0.5vmin;
 }
+
+.init-button-container{
+  width: 100%;
+  height: 10vmin;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}

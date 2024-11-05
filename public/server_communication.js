@@ -1,3 +1,40 @@
+const createTables = async () => {
+  try {
+    const response = await fetch("/create_tables", {
+      method: "PUT", // Specify the HTTP method
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.ok){
+      console.log("Database and tables created successfully!")
+    } else{
+      console.log("Database and tables not created.")
+    }
+  } catch (err) {
+    console.error(err.message);
+  }
+}
+
+const initializeTables = async () => {
+  try {
+    const response = await fetch("/initialize_tables", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    if (response.ok){
+      console.log("Table data initialized successfully!")
+    } else{
+      console.log("Table data not initialized.")
+    }
+  } catch (err) {
+    console.error(err.message);
+  }
+}
+
 const fetchCustomers = async () => {
   const response = await fetch("/customers");
   const customers = await response.json();
@@ -247,34 +284,37 @@ document
   .getElementById("delete-customer-form")
   .addEventListener("submit", async function (event) {
     event.preventDefault();
-    const formData = new FormData(this);
-    const formObject = Object.fromEntries(formData.entries());
-    try {
-      const response = await fetch(
-        `/delete_customer/${formObject.delete_customer_id}`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
+    let continueDelete = confirm("Deleting a customer will cause a cascading effect in the database: Proceed?")
+    if (continueDelete){
+      const formData = new FormData(this);
+      const formObject = Object.fromEntries(formData.entries());
+      try {
+        const response = await fetch(
+          `/delete_customer/${formObject.delete_customer_id}`,
+          {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+        if (response.ok) {
+          updateTables();
+          document.getElementById("delete_statusMessage").style.display = "block";
+          document.getElementById("delete_statusMessage").innerText =
+            "Customer deleted!";
+          this.reset();
+          setTimeout(() => {
+            document.getElementById("delete_statusMessage").style.display =
+              "none";
+          }, 2000);
+        } else {
+          document.getElementById("delete_statusMessage").innerText =
+            "Failed to delete customer.";
         }
-      );
-      if (response.ok) {
-        updateTables();
-        document.getElementById("delete_statusMessage").style.display = "block";
+      } catch (error) {
+        console.error("Error:", error);
         document.getElementById("delete_statusMessage").innerText =
-          "Customer deleted!";
-        this.reset();
-        setTimeout(() => {
-          document.getElementById("delete_statusMessage").style.display =
-            "none";
-        }, 2000);
-      } else {
-        document.getElementById("delete_statusMessage").innerText =
-          "Failed to delete customer.";
+          "An error occurred. Please try again.";
       }
-    } catch (error) {
-      console.error("Error:", error);
-      document.getElementById("delete_statusMessage").innerText =
-        "An error occurred. Please try again.";
     }
   });
 
@@ -334,28 +374,31 @@ document
 document
   .querySelector(".delete-all-customers")
   .addEventListener("click", async () => {
-    try {
-      const response = await fetch(`/delete_all_customers/`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (response.ok) {
-        updateTables();
-        document.getElementById("delete_statusMessage").style.display = "block";
+    let continueDelete = confirm("Deleting all customers will cause a significant cascading effect in the database: Proceed?")
+    if (continueDelete){
+      try {
+        const response = await fetch(`/delete_all_customers/`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          updateTables();
+          document.getElementById("delete_statusMessage").style.display = "block";
+          document.getElementById("delete_statusMessage").innerText =
+            "All customers deleted successfully!";
+          setTimeout(() => {
+            document.getElementById("delete_statusMessage").style.display =
+              "none";
+          }, 2000);
+        } else {
+          document.getElementById("delete_statusMessage").innerText =
+            "Failed to delete all customers.";
+        }
+      } catch (error) {
+        console.error("Error:", error);
         document.getElementById("delete_statusMessage").innerText =
-          "All customers deleted successfully!";
-        setTimeout(() => {
-          document.getElementById("delete_statusMessage").style.display =
-            "none";
-        }, 2000);
-      } else {
-        document.getElementById("delete_statusMessage").innerText =
-          "Failed to delete all customers.";
+          "An error occurred. Please try again.";
       }
-    } catch (error) {
-      console.error("Error:", error);
-      document.getElementById("delete_statusMessage").innerText =
-        "An error occurred. Please try again.";
     }
   });
 
@@ -370,6 +413,21 @@ const updateTables = () => {
   fetchMonthlyRevenue()
 };
 
-window.onload = () => {
-  updateTables();
-};
+document.querySelector(".create-tables-button").addEventListener('click', async () => {
+  let confirmCreate = confirm("Creating tables will reset all current table data: Proceed?")
+  if(confirmCreate) {
+    await createTables()
+    updateTables()
+    document.querySelector(".initialize-data").style.display = "block"
+    document.querySelector(".create-tables-button").textContent = "Reset Tables"
+  }
+});
+
+document.querySelector(".initialize-data").addEventListener('click', async () => {
+  let confirmItitialize = confirm("Initializing table data will reset all current table data: Proceed?")
+  if(confirmItitialize) {
+    await initializeTables()
+    updateTables()
+    document.querySelector(".initialize-data").style.display = "none"
+  }
+});
