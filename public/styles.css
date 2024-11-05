@@ -31,7 +31,7 @@
   row-gap: 2vmin;
 }
 
-.create-customer, .update-customer, .delete-customer, .minutes-cost-customer, .check-standing-customer{
+.create-customer, .update-customer, .delete-customer, .minutes-cost-customer, .check-standing-customer, .monthly-revenue{
   border: solid black 1px;
   min-width: 10vmin;
   display: flex;
@@ -78,11 +78,19 @@
   width: 100%;
 }
 
-#minutesCostTable, #standingsTable{
+#minutesCostTable, #standingsTable, #monthlyRevenueContainer{
   margin-top:2vmin;
 }
 
 #standingsTable{
   width: 80%;
   text-align: left;
+}
+
+#monthlyRevenueContainer{
+  padding:2vmin;
+}
+
+#monthlyRevenueContainer p{
+  margin: 0.5vmin;
 }

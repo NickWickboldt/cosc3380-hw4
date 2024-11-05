@@ -149,6 +149,27 @@ const fetchCustomerStanding = async () => {
   });
 };
 
+const fetchMonthlyRevenue = async () => {
+  const response = await fetch("/monthly_revenue");
+  const revenueData = await response.json();
+
+  const monthlyRevenueContainer = document.getElementById("monthlyRevenueContainer")
+  monthlyRevenueContainer.innerHTML = ''
+  revenueData.forEach(revenue => {
+    
+    let section = document.createElement('div');
+
+    section.innerHTML = `
+      <h3>${revenue.plan_name}</h3>
+      <p>Cost per Customer: $${revenue.cost_per_customer}</p>
+      <p>Monthly Revenue Per Plan: $${revenue.monthly_revenue_per_plan}</p>
+      <p>Number of Customers: ${revenue.number_of_customers}</p>
+      <p>Total Monthly Revenue: $${revenue.total_monthly_revenue.toFixed(2)}</p>
+    `
+    monthlyRevenueContainer.appendChild(section);
+  });
+}
+
 document
   .getElementById("create-customer-form")
   .addEventListener("submit", async function (event) {
@@ -346,6 +367,7 @@ const updateTables = () => {
   fetchCallRecord();
   fetchPayment();
   fetchCustomerStanding();
+  fetchMonthlyRevenue()
 };
 
 window.onload = () => {

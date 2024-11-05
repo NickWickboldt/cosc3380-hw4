@@ -137,6 +137,42 @@ app.get("/customer_standing", async (req, res) => {
   }
 });
 
+app.get("/monthly_revenue", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        pn.plan_name,
+        COUNT(c.customer_id) as number_of_customers,
+        pn.plan_cost as cost_per_customer,
+        COUNT(c.customer_id) * pn.plan_cost as monthly_revenue_per_plan,
+        (SELECT 
+          SUM(plan_cost * counted_customers) 
+        FROM 
+          (SELECT 
+            COUNT(customers.customer_id) as counted_customers,
+            plan_name.plan_cost
+          FROM customers
+          JOIN phone_plan ON customers.plan_id = phone_plan.plan_id
+          JOIN plan_name ON phone_plan.plan_name = plan_name.plan_name
+          GROUP BY plan_name.plan_cost) as total
+        ) as total_monthly_revenue
+      FROM 
+        customers c
+        JOIN phone_plan p ON c.plan_id = p.plan_id
+        JOIN plan_name pn ON p.plan_name = pn.plan_name
+      GROUP BY 
+        pn.plan_name,
+        pn.plan_cost
+      ORDER BY 
+        monthly_revenue_per_plan DESC;`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.sendStatus(500);
+  }
+});
+
 
 app.put("/update_customer/:customer_id", async (req, res) => {
   const { customer_id } = req.params;
@@ -237,7 +273,7 @@ app.delete("/delete_customer/:customer_id", async (req, res) => {
     await client.query("BEGIN");
 
     const customerResult = await client.query(
-      `SELECT bank_account_id, Plan_ID FROM customers WHERE Customer_ID = $1`,
+      `SELECT bank_account_id, plan_id FROM customers WHERE customer_id = $1`,
       [customer_id]
     );
 
@@ -248,15 +284,28 @@ app.delete("/delete_customer/:customer_id", async (req, res) => {
 
     const { bank_account_id, plan_id } = customerResult.rows[0];
 
-    await client.query(`DELETE FROM customers WHERE Customer_ID = $1`, [
+    //Delete related call records
+    await client.query(`DELETE FROM call_record WHERE customer_id = $1`, [
       customer_id,
     ]);
 
+    //Delete related payments
+    await client.query(`DELETE FROM payment WHERE customer_id = $1`, [
+      customer_id,
+    ]);
+
+    //Delete the customer
+    await client.query(`DELETE FROM customers WHERE customer_id = $1`, [
+      customer_id,
+    ]);
+
+    //Delete the associated bank account
     await client.query(`DELETE FROM bank_account WHERE bank_account_id = $1`, [
       bank_account_id,
     ]);
 
-    await client.query(`DELETE FROM phone_plan WHERE Plan_ID = $1`, [plan_id]);
+    //Delete the associated phone plan
+    await client.query(`DELETE FROM phone_plan WHERE plan_id = $1`, [plan_id]);
 
     await client.query("COMMIT");
     res.sendStatus(200);
@@ -269,17 +318,29 @@ app.delete("/delete_customer/:customer_id", async (req, res) => {
   }
 });
 
+
 app.delete("/delete_all_customers", async (req, res) => {
   try {
     const deleteQuery = `
-      WITH deleted_customers AS (
+      WITH deleted_call_records AS (
+        DELETE FROM call_record
+        WHERE customer_id IN (SELECT customer_id FROM customers)
+      ),
+      deleted_payments AS (
+        DELETE FROM payment
+        WHERE customer_id IN (SELECT customer_id FROM customers)
+      ),
+      
+      deleted_customers AS (
         DELETE FROM customers 
         RETURNING bank_account_id, Plan_ID
       ),
+      
       deleted_bank AS (
         DELETE FROM bank_account 
         WHERE bank_account_id IN (SELECT bank_account_id FROM deleted_customers)
       )
+      
       DELETE FROM phone_plan 
       WHERE Plan_ID IN (SELECT Plan_ID FROM deleted_customers);
     `;
@@ -291,6 +352,7 @@ app.delete("/delete_all_customers", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 // Route to handle form submissions
 app.post("/submit_customer", async (req, res) => {

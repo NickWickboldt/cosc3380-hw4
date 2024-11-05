@@ -80,8 +80,7 @@ INSERT INTO "bank_account" (Account_number, Balance, Bank_name, Bank_log) VALUES
     (105, 3500, 'Bank F', '+3500'),
     (106, 4000, 'Bank G', '+4000'),
     (107, 4500, 'Bank H', '+4500'),
-    (108, 5000, 'Bank I', '+5000'),
-    (109, 5500, 'Bank J', '+5500');
+    (108, 5000, 'Bank I', '+5000');
 
 -- Insert data into phone_plan table
 INSERT INTO "phone_plan" (Data_type, Call_Minutes, Plan_Name) VALUES
@@ -93,8 +92,7 @@ INSERT INTO "phone_plan" (Data_type, Call_Minutes, Plan_Name) VALUES
     ('5G', 1200, 'Premium'),
     ('4G', 300, 'Basic'),
     ('4G', 600, 'Standard'),
-    ('5G', 1200, 'Premium'),
-    ('4G', 300, 'Basic');
+    ('5G', 1200, 'Premium');
 
 -- Insert data into customers table (Account_number and Plan_ID should match entries in bank_account and phone_plan)
 INSERT INTO "customers" (First_name, Last_name, Email, Phone_number, bank_account_id, Plan_ID) VALUES
