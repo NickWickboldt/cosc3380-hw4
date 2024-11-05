@@ -28,7 +28,7 @@
   display: grid;
   grid-template-columns: 30% 30% 30%;
   column-gap: 5%;
-  row-gap: 5%;
+  row-gap: 2vmin;
 }
 
 .create-customer, .update-customer, .delete-customer, .minutes-cost-customer{
@@ -57,14 +57,14 @@
   margin-top:5vmin;
 }
 
-.customer-list, .bank-list, .phone-plan-list, .available-plans-list{
+.customer-list, .bank-list, .phone-plan-list, .available-plans-list, .call-record-list, .payment-list{
   width: 90%;
   background-color: aliceblue;
   padding:1vmin;
   margin-top: 5vmin;
 }
 
-#customersTable, #bankTable, #phonePlanTable, #availablePlansTable, #minutesCostTable{
+#customersTable, #bankTable, #phonePlanTable, #availablePlansTable, #minutesCostTable, #callRecordsTable, #paymentTable{
   width:100%;
   text-align: left;
 }
@@ -72,7 +72,6 @@
 #customersTable th, #customersTable td{
   padding:0.3vmin;
   border-radius: 1vmin;
-  
 }
 
 #plan_id, #update_plan_id{

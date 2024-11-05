@@ -59,6 +59,26 @@ app.get("/plan_name", async (req, res) => {
   }
 });
 
+app.get("/call_record", async (req, res) => {
+  try{
+    const result = await pool.query("SELECT * FROM call_record")
+    res.json(result.rows)
+  } catch (err) {
+    console.error(err.message)
+    res.sendStatus(500)
+  }
+})
+
+app.get("/payment", async (req, res) => {
+  try{
+    const result = await pool.query("SELECT * FROM payment")
+    res.json(result.rows)
+  } catch (err) {
+    console.error(err.message)
+    res.sendStatus(500)
+  }
+})
+
 app.get("/minutes_cost/:minutes_cost_customer_id", async (req, res) => {
   const { minutes_cost_customer_id } = req.params;
   try{

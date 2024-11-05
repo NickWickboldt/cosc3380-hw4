@@ -84,6 +84,52 @@ const fetchPlanNames = async () => {
   });
 }
 
+const fetchCallRecord = async () => {
+  const response = await fetch("/call_record");
+  const callRecord = await response.json()
+
+  const callRecordTableBody = document.querySelector("#callRecordsTable tbody");
+  callRecordTableBody.innerHTML = '';
+
+  callRecord.forEach(record => {
+    const row = document.createElement('tr');
+
+    row.innerHTML = `
+      <td>${record.call_id}</td>
+      <td>${record.call_start}</td>
+      <td>${record.call_end}</td>
+      <td>${record.duration}</td>
+      <td>${record.cost}</td>
+      <td>${record.date}</td>
+      <td>${record.customer_id}</td>
+    `;
+    callRecordTableBody.appendChild(row);
+  });
+}
+
+const fetchPayment = async () => {
+  const response = await fetch("/payment");
+  const payment = await response.json()
+
+  const paymentTableBody = document.querySelector("#paymentTable tbody");
+  paymentTableBody.innerHTML = '';
+
+  payment.forEach(pay => {
+    const row = document.createElement('tr');
+
+    row.innerHTML = `
+      <td>${pay.payment_id}</td>
+      <td>${pay.amount}</td>
+      <td>${pay.payment_date}</td>
+      <td>${pay.company_balance}</td>
+      <td>${pay.customer_id}</td>
+      <td>${pay.bank_id}</td>
+      <td>${pay.plan_id}</td>
+    `;
+    paymentTableBody.appendChild(row);
+  });
+}
+
 
 document.getElementById('create-customer-form').addEventListener('submit', async function(event) {
   event.preventDefault(); // Prevent default form submission
@@ -245,6 +291,8 @@ const updateTables = () => {
   fetchBanks()
   fetchPhonePlans()
   fetchPlanNames()
+  fetchCallRecord()
+  fetchPayment()
 }
 
 window.onload = () => {
