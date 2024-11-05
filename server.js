@@ -60,30 +60,30 @@ app.get("/plan_name", async (req, res) => {
 });
 
 app.get("/call_record", async (req, res) => {
-  try{
-    const result = await pool.query("SELECT * FROM call_record")
-    res.json(result.rows)
+  try {
+    const result = await pool.query("SELECT * FROM call_record");
+    res.json(result.rows);
   } catch (err) {
-    console.error(err.message)
-    res.sendStatus(500)
+    console.error(err.message);
+    res.sendStatus(500);
   }
-})
+});
 
 app.get("/payment", async (req, res) => {
-  try{
-    const result = await pool.query("SELECT * FROM payment")
-    res.json(result.rows)
+  try {
+    const result = await pool.query("SELECT * FROM payment");
+    res.json(result.rows);
   } catch (err) {
-    console.error(err.message)
-    res.sendStatus(500)
+    console.error(err.message);
+    res.sendStatus(500);
   }
-})
+});
 
 app.get("/minutes_cost/:minutes_cost_customer_id", async (req, res) => {
   const { minutes_cost_customer_id } = req.params;
-  try{
+  try {
     const result = await pool.query(
-    `SELECT 
+      `SELECT 
       c.Customer_ID,
       c.First_name,
       c.Last_name,
@@ -97,13 +97,46 @@ app.get("/minutes_cost/:minutes_cost_customer_id", async (req, res) => {
       c.Customer_ID = $1
     GROUP BY 
       c.Customer_ID, c.First_name, c.Last_name;
-    `,[minutes_cost_customer_id])
+    `,
+      [minutes_cost_customer_id]
+    );
     res.json(result.rows);
-    } catch (err) {
-      console.error(err.message);
-      res.sendStatus(500);
-    }
+  } catch (err) {
+    console.error(err.message);
+    res.sendStatus(500);
+  }
 });
+
+app.get("/customer_standing", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        c.customer_id,
+        c.first_name || ' ' || c.last_name AS customer_name,
+        b.balance,
+        pn.plan_cost,
+        pn.cost_frequency,
+        FLOOR(b.balance / pn.plan_cost) as affordable_months,
+        CASE
+          WHEN b.balance < pn.plan_cost THEN 'Low Balance'
+          WHEN b.balance < pn.plan_cost * 3 THEN 'Warning'
+          ELSE 'Good Standing'
+        END as account_status
+      FROM 
+        customers c
+        JOIN bank_account b ON c.bank_account_id = b.bank_account_id  -- Corrected join condition
+        JOIN phone_plan p ON c.plan_id = p.plan_id
+        JOIN plan_name pn ON p.plan_name = pn.plan_name
+      ORDER BY 
+        affordable_months ASC;`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.sendStatus(500);
+  }
+});
+
 
 app.put("/update_customer/:customer_id", async (req, res) => {
   const { customer_id } = req.params;
@@ -113,7 +146,7 @@ app.put("/update_customer/:customer_id", async (req, res) => {
     update_email,
     update_phone_number,
     update_account_number,
-    update_plan_id
+    update_plan_id,
   } = req.body;
 
   const plan_cost = 50.0;
@@ -123,7 +156,7 @@ app.put("/update_customer/:customer_id", async (req, res) => {
 
   try {
     // Begin transaction
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     // Ensure the plan_name exists in plan_name table
     await client.query(
@@ -140,7 +173,7 @@ app.put("/update_customer/:customer_id", async (req, res) => {
     );
 
     if (customerResult.rows.length === 0) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       return res.status(404).send("Customer not found");
     }
 
@@ -173,26 +206,28 @@ app.put("/update_customer/:customer_id", async (req, res) => {
            Phone_number = $4::VARCHAR, bank_account_id = $5::INT, Plan_ID = $6::INT
        WHERE Customer_ID = $7::INT`,
       [
-        update_first_name, update_last_name, update_email, update_phone_number,
-        bankAccountId, generatedPlanId, customer_id
+        update_first_name,
+        update_last_name,
+        update_email,
+        update_phone_number,
+        bankAccountId,
+        generatedPlanId,
+        customer_id,
       ]
     );
 
     // Commit transaction
-    await client.query('COMMIT');
+    await client.query("COMMIT");
     res.sendStatus(200);
     console.log("Successfully updated customer and related entries.");
   } catch (err) {
-    await client.query('ROLLBACK'); // Rollback transaction on error
+    await client.query("ROLLBACK"); // Rollback transaction on error
     console.error(err.message);
     res.sendStatus(500);
   } finally {
     client.release(); // Release the client back to the pool
   }
 });
-
-
-
 
 app.delete("/delete_customer/:customer_id", async (req, res) => {
   const { customer_id } = req.params;
@@ -234,7 +269,6 @@ app.delete("/delete_customer/:customer_id", async (req, res) => {
   }
 });
 
-
 app.delete("/delete_all_customers", async (req, res) => {
   try {
     const deleteQuery = `
@@ -257,7 +291,6 @@ app.delete("/delete_all_customers", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
 
 // Route to handle form submissions
 app.post("/submit_customer", async (req, res) => {
@@ -294,10 +327,12 @@ app.post("/submit_customer", async (req, res) => {
 
     const bankAccountId = bankAccountResult.rows[0]
       ? bankAccountResult.rows[0].bank_account_id
-      : (await client.query(
-          `SELECT bank_account_id FROM bank_account WHERE Account_number = $1`,
-          [account_number]
-        )).rows[0].bank_account_id;
+      : (
+          await client.query(
+            `SELECT bank_account_id FROM bank_account WHERE Account_number = $1`,
+            [account_number]
+          )
+        ).rows[0].bank_account_id;
 
     await client.query(
       `INSERT INTO plan_name (Plan_name, Plan_cost, Cost_frequency) 
@@ -338,6 +373,5 @@ app.post("/submit_customer", async (req, res) => {
     client.release();
   }
 });
-
 
 app.listen(3000, () => console.log("Server is running on port 3000"));

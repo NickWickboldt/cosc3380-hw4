@@ -31,7 +31,7 @@
   row-gap: 2vmin;
 }
 
-.create-customer, .update-customer, .delete-customer, .minutes-cost-customer{
+.create-customer, .update-customer, .delete-customer, .minutes-cost-customer, .check-standing-customer{
   border: solid black 1px;
   min-width: 10vmin;
   display: flex;
@@ -41,7 +41,7 @@
   min-height: 55vmin;
 }
 
-#create-customer-form > h2, #update-customer-form > h2, #delete-customer-form > h2, #minutes-cost-customer-form > h2{
+#create-customer-form > h2, #update-customer-form > h2, #delete-customer-form > h2, #minutes-cost-customer-form > h2, #check-standing-customer-form > h2{
   margin-bottom: 1vmin;
 }
 
@@ -69,7 +69,7 @@
   text-align: left;
 }
 
-#customersTable th, #customersTable td{
+#customersTable th, #customersTable td, #standingsTable th, #standingsTable td{
   padding:0.3vmin;
   border-radius: 1vmin;
 }
@@ -78,6 +78,11 @@
   width: 100%;
 }
 
-#minutesCostTable{
+#minutesCostTable, #standingsTable{
   margin-top:2vmin;
+}
+
+#standingsTable{
+  width: 80%;
+  text-align: left;
 }

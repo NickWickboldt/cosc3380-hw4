@@ -1,12 +1,12 @@
 const fetchCustomers = async () => {
   const response = await fetch("/customers");
-  const customers = await response.json()
+  const customers = await response.json();
 
-  const customersTableBody = document.querySelector('#customersTable tbody');
-  customersTableBody.innerHTML = '';
+  const customersTableBody = document.querySelector("#customersTable tbody");
+  customersTableBody.innerHTML = "";
 
-  customers.forEach(customer => {
-    const row = document.createElement('tr');
+  customers.forEach((customer) => {
+    const row = document.createElement("tr");
 
     // Create and append table cells for each customer attribute
     row.innerHTML = `
@@ -14,25 +14,24 @@ const fetchCustomers = async () => {
       <td>${customer.first_name}</td>
       <td>${customer.last_name}</td>
       <td>${customer.email}</td>
-      <td>${customer.phone_number || 'N/A'}</td>
+      <td>${customer.phone_number || "N/A"}</td>
       <td>${new Date(customer.created_at).toLocaleString()}</td>
       <td>${customer.bank_account_id}</td>
       <td>${customer.plan_id}</td>
     `;
     customersTableBody.appendChild(row);
   });
-
-}
+};
 
 const fetchBanks = async () => {
   const response = await fetch("/banks");
-  const banks = await response.json()
+  const banks = await response.json();
 
   const banktableBody = document.querySelector("#bankTable tbody");
-  banktableBody.innerHTML = '';
+  banktableBody.innerHTML = "";
 
-  banks.forEach(bank => {
-    const row = document.createElement('tr');
+  banks.forEach((bank) => {
+    const row = document.createElement("tr");
 
     row.innerHTML = `
       <td>${bank.bank_account_id}</td>
@@ -43,17 +42,17 @@ const fetchBanks = async () => {
     `;
     banktableBody.appendChild(row);
   });
-}
+};
 
 const fetchPhonePlans = async () => {
   const response = await fetch("/phone_plans");
-  const phonePlans = await response.json()
+  const phonePlans = await response.json();
 
   const phonePlanstableBody = document.querySelector("#phonePlanTable tbody");
-  phonePlanstableBody.innerHTML = '';
+  phonePlanstableBody.innerHTML = "";
 
-  phonePlans.forEach(plan => {
-    const row = document.createElement('tr');
+  phonePlans.forEach((plan) => {
+    const row = document.createElement("tr");
 
     row.innerHTML = `
       <td>${plan.plan_id}</td>
@@ -63,17 +62,19 @@ const fetchPhonePlans = async () => {
     `;
     phonePlanstableBody.appendChild(row);
   });
-}
+};
 
 const fetchPlanNames = async () => {
   const response = await fetch("/plan_name");
-  const planNames = await response.json()
+  const planNames = await response.json();
 
-  const planNamesTableBody = document.querySelector("#availablePlansTable tbody");
-  planNamesTableBody.innerHTML = '';
+  const planNamesTableBody = document.querySelector(
+    "#availablePlansTable tbody"
+  );
+  planNamesTableBody.innerHTML = "";
 
-  planNames.forEach(plan => {
-    const row = document.createElement('tr');
+  planNames.forEach((plan) => {
+    const row = document.createElement("tr");
 
     row.innerHTML = `
       <td>${plan.plan_name}</td>
@@ -82,17 +83,17 @@ const fetchPlanNames = async () => {
     `;
     planNamesTableBody.appendChild(row);
   });
-}
+};
 
 const fetchCallRecord = async () => {
   const response = await fetch("/call_record");
-  const callRecord = await response.json()
+  const callRecord = await response.json();
 
   const callRecordTableBody = document.querySelector("#callRecordsTable tbody");
-  callRecordTableBody.innerHTML = '';
+  callRecordTableBody.innerHTML = "";
 
-  callRecord.forEach(record => {
-    const row = document.createElement('tr');
+  callRecord.forEach((record) => {
+    const row = document.createElement("tr");
 
     row.innerHTML = `
       <td>${record.call_id}</td>
@@ -105,17 +106,17 @@ const fetchCallRecord = async () => {
     `;
     callRecordTableBody.appendChild(row);
   });
-}
+};
 
 const fetchPayment = async () => {
   const response = await fetch("/payment");
-  const payment = await response.json()
+  const payment = await response.json();
 
   const paymentTableBody = document.querySelector("#paymentTable tbody");
-  paymentTableBody.innerHTML = '';
+  paymentTableBody.innerHTML = "";
 
-  payment.forEach(pay => {
-    const row = document.createElement('tr');
+  payment.forEach((pay) => {
+    const row = document.createElement("tr");
 
     row.innerHTML = `
       <td>${pay.payment_id}</td>
@@ -128,116 +129,160 @@ const fetchPayment = async () => {
     `;
     paymentTableBody.appendChild(row);
   });
-}
+};
 
+const fetchCustomerStanding = async () => {
+  const response = await fetch("/customer_standing");
+  const standings = await response.json();
 
-document.getElementById('create-customer-form').addEventListener('submit', async function(event) {
-  event.preventDefault(); // Prevent default form submission
+  const standingsTableBody = document.querySelector("#standingsTable tbody");
+  standingsTableBody.innerHTML = "";
 
-  const formData = new FormData(this);
-  const formObject = Object.fromEntries(formData.entries());
+  standings.forEach((standing) => {
+    const row = document.createElement("tr");
 
-  try {
-    const response = await fetch('/submit_customer', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formObject)
-    });
+    row.innerHTML = `
+      <td>${standing.customer_name}</td>
+      <td>${standing.account_status}</td>
+    `;
+    standingsTableBody.appendChild(row);
+  });
+};
 
-    if (response.ok) {
-      document.getElementById('statusMessage').style.display = "block";
-      document.getElementById('statusMessage').innerText = 'Customer created!';
-      this.reset(); 
-      updateTables()
-      setTimeout(() => {
-        document.getElementById('statusMessage').style.display = "none"
-      }, 2000)
-    } else {
-      document.getElementById('statusMessage').innerText = 'Failed to create customer.';
+document
+  .getElementById("create-customer-form")
+  .addEventListener("submit", async function (event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(this);
+    const formObject = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("/submit_customer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formObject),
+      });
+
+      if (response.ok) {
+        document.getElementById("statusMessage").style.display = "block";
+        document.getElementById("statusMessage").innerText =
+          "Customer created!";
+        this.reset();
+        updateTables();
+        setTimeout(() => {
+          document.getElementById("statusMessage").style.display = "none";
+        }, 2000);
+      } else {
+        document.getElementById("statusMessage").innerText =
+          "Failed to create customer.";
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      document.getElementById("statusMessage").innerText =
+        "An error occurred. Please try again.";
     }
-  } catch (error) {
-    console.error('Error:', error);
-    document.getElementById('statusMessage').innerText = 'An error occurred. Please try again.';
-  }
-});
+  });
 
-document.getElementById('update-customer-form').addEventListener('submit', async function(event){
-  event.preventDefault()
+document
+  .getElementById("update-customer-form")
+  .addEventListener("submit", async function (event) {
+    event.preventDefault();
 
-  const formData = new FormData(this);
-  const formObject = Object.fromEntries(formData.entries());
-  try{
-    const response = await fetch(`/update_customer/${formObject.update_customer_id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formObject)
-    })
-    if (response.ok) {
-      updateTables()
-      document.getElementById('update_statusMessage').style.display = "block"; 
-      document.getElementById('update_statusMessage').innerText = 'Customer updated!';
-      this.reset(); 
-      setTimeout(() => {
-        document.getElementById('update_statusMessage').style.display = "none"
-      }, 2000)
-    } else {
-      document.getElementById('update_statusMessage').innerText = 'Failed to update customer.';
+    const formData = new FormData(this);
+    const formObject = Object.fromEntries(formData.entries());
+    try {
+      const response = await fetch(
+        `/update_customer/${formObject.update_customer_id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formObject),
+        }
+      );
+      if (response.ok) {
+        updateTables();
+        document.getElementById("update_statusMessage").style.display = "block";
+        document.getElementById("update_statusMessage").innerText =
+          "Customer updated!";
+        this.reset();
+        setTimeout(() => {
+          document.getElementById("update_statusMessage").style.display =
+            "none";
+        }, 2000);
+      } else {
+        document.getElementById("update_statusMessage").innerText =
+          "Failed to update customer.";
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      document.getElementById("update_statusMessage").innerText =
+        "An error occurred. Please try again.";
     }
-  } catch (error) {
-  console.error('Error:', error);
-  document.getElementById('update_statusMessage').innerText = 'An error occurred. Please try again.';
-}
-})
-document.getElementById('delete-customer-form').addEventListener('submit', async function(event){
-  event.preventDefault();
-  const formData = new FormData(this);
-  const formObject = Object.fromEntries(formData.entries());
-  try{
-    const response = await fetch(`/delete_customer/${formObject.delete_customer_id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    if (response.ok) {
-      updateTables()
-      document.getElementById('delete_statusMessage').style.display = "block"; 
-      document.getElementById('delete_statusMessage').innerText = 'Customer deleted!';
-      this.reset(); 
-      setTimeout(() => {
-        document.getElementById('delete_statusMessage').style.display = "none"
-      }, 2000)
-    } else {
-      document.getElementById('delete_statusMessage').innerText = 'Failed to delete customer.';
+  });
+document
+  .getElementById("delete-customer-form")
+  .addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    const formObject = Object.fromEntries(formData.entries());
+    try {
+      const response = await fetch(
+        `/delete_customer/${formObject.delete_customer_id}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      if (response.ok) {
+        updateTables();
+        document.getElementById("delete_statusMessage").style.display = "block";
+        document.getElementById("delete_statusMessage").innerText =
+          "Customer deleted!";
+        this.reset();
+        setTimeout(() => {
+          document.getElementById("delete_statusMessage").style.display =
+            "none";
+        }, 2000);
+      } else {
+        document.getElementById("delete_statusMessage").innerText =
+          "Failed to delete customer.";
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      document.getElementById("delete_statusMessage").innerText =
+        "An error occurred. Please try again.";
     }
-  } catch (error){
-    console.error('Error:', error);
-    document.getElementById('delete_statusMessage').innerText = 'An error occurred. Please try again.';
-  }
+  });
 
-})
+document
+  .getElementById("minutes-cost-customer-form")
+  .addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    const formObject = Object.fromEntries(formData.entries());
+    const resultTable = document.getElementById("minutesCostTable");
+    try {
+      const response = await fetch(
+        `/minutes_cost/${formObject.minutes_cost_customer_id}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
 
-document.getElementById('minutes-cost-customer-form').addEventListener('submit', async function(event){
-  event.preventDefault();
-  const formData = new FormData(this);
-  const formObject = Object.fromEntries(formData.entries());
-  const resultTable = document.getElementById('minutesCostTable');
-  try{
-    const response = await fetch(`/minutes_cost/${formObject.minutes_cost_customer_id}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    if (response.ok) {
-      const data = await response.json()
+        if (data.length > 0) {
+          resultTable.innerHTML = "";
+          const customerData = data[0];
+          console.log(customerData);
+          resultTable.style.display = "table";
+          const row = document.createElement("tr");
 
-      if(data.length > 0){
-        resultTable.innerHTML = ''
-        const customerData = data[0];
-        console.log(customerData)
-        resultTable.style.display = "table";
-        const row = document.createElement('tr');
-
-        resultTable.innerHTML = `
+          resultTable.innerHTML = `
         <tr>
           <th>Cost</th>
           <th>Minutes</th>
@@ -247,54 +292,62 @@ document.getElementById('minutes-cost-customer-form').addEventListener('submit',
           <td>${customerData.total_logged_minutes}</td>
         </tr>
       `;
-      
-
-        resultTable.appendChild(row);
-      }      
-      this.reset(); 
-      setTimeout(() => {
-        document.getElementById('minutes_cost_statusMessage').style.display = "none"
-      }, 2000)
-    } else {
-      document.getElementById('minutes_cost_statusMessage').innerText = 'Failed to find customer.';
+          resultTable.appendChild(row);
+        }
+        this.reset();
+        setTimeout(() => {
+          document.getElementById("minutes_cost_statusMessage").style.display =
+            "none";
+        }, 2000);
+      } else {
+        document.getElementById("minutes_cost_statusMessage").innerText =
+          "Failed to find customer.";
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      document.getElementById("minutes_cost_statusMessage").innerText =
+        "An error occurred. Please try again.";
     }
-  } catch (error){
-    console.error('Error:', error);
-    document.getElementById('minutes_cost_statusMessage').innerText = 'An error occurred. Please try again.';
-  }
-})
+  });
 
-document.querySelector(".delete-all-customers").addEventListener('click', async () => {
-  try{
-    const response = await fetch(`/delete_all_customers/`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-    })
-    if (response.ok) {
-      updateTables()
-      document.getElementById('delete_statusMessage').style.display = "block"; 
-      document.getElementById('delete_statusMessage').innerText = 'All customers deleted successfully!';
-      setTimeout(() => {
-        document.getElementById('delete_statusMessage').style.display = "none"
-      }, 2000)
-    } else {
-      document.getElementById('delete_statusMessage').innerText = 'Failed to delete all customers.';
+document
+  .querySelector(".delete-all-customers")
+  .addEventListener("click", async () => {
+    try {
+      const response = await fetch(`/delete_all_customers/`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (response.ok) {
+        updateTables();
+        document.getElementById("delete_statusMessage").style.display = "block";
+        document.getElementById("delete_statusMessage").innerText =
+          "All customers deleted successfully!";
+        setTimeout(() => {
+          document.getElementById("delete_statusMessage").style.display =
+            "none";
+        }, 2000);
+      } else {
+        document.getElementById("delete_statusMessage").innerText =
+          "Failed to delete all customers.";
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      document.getElementById("delete_statusMessage").innerText =
+        "An error occurred. Please try again.";
     }
-  } catch (error){
-    console.error('Error:', error);
-    document.getElementById('delete_statusMessage').innerText = 'An error occurred. Please try again.';
-  }
-})
+  });
 
 const updateTables = () => {
-  fetchCustomers()
-  fetchBanks()
-  fetchPhonePlans()
-  fetchPlanNames()
-  fetchCallRecord()
-  fetchPayment()
-}
+  fetchCustomers();
+  fetchBanks();
+  fetchPhonePlans();
+  fetchPlanNames();
+  fetchCallRecord();
+  fetchPayment();
+  fetchCustomerStanding();
+};
 
 window.onload = () => {
-  updateTables()
-}
+  updateTables();
+};
