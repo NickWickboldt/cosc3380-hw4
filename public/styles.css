@@ -28,23 +28,24 @@
   display: grid;
   grid-template-columns: 30% 30% 30%;
   column-gap: 5%;
+  row-gap: 5%;
 }
 
-.create-customer, .update-customer, .delete-customer{
+.create-customer, .update-customer, .delete-customer, .minutes-cost-customer{
   border: solid black 1px;
   min-width: 10vmin;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding:1vmin;
-  min-height: 45vmin;
+  min-height: 55vmin;
 }
 
-#create-customer-form > h2, #update-customer-form > h2, #delete-customer-form > h2{
+#create-customer-form > h2, #update-customer-form > h2, #delete-customer-form > h2, #minutes-cost-customer-form > h2{
   margin-bottom: 1vmin;
 }
 
-#statusMessage, #update_statusMessage, #delete_statusMessage{
+#statusMessage, #update_statusMessage, #delete_statusMessage, #minutes_cost_statusMessage{
   margin-top:1vmin;
   background-color: rgba(0, 255, 0, 0.3);
   font-weight: bold;
@@ -56,14 +57,14 @@
   margin-top:5vmin;
 }
 
-.customer-list, .bank-list, .phone-plan-list{
+.customer-list, .bank-list, .phone-plan-list, .available-plans-list{
   width: 90%;
   background-color: aliceblue;
   padding:1vmin;
   margin-top: 5vmin;
 }
 
-#customersTable, #bankTable, #phonePlanTable{
+#customersTable, #bankTable, #phonePlanTable, #availablePlansTable, #minutesCostTable{
   width:100%;
   text-align: left;
 }
@@ -76,4 +77,8 @@
 
 #plan_id, #update_plan_id{
   width: 100%;
+}
+
+#minutesCostTable{
+  margin-top:2vmin;
 }

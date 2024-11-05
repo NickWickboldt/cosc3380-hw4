@@ -16,7 +16,7 @@ const fetchCustomers = async () => {
       <td>${customer.email}</td>
       <td>${customer.phone_number || 'N/A'}</td>
       <td>${new Date(customer.created_at).toLocaleString()}</td>
-      <td>${customer.account_number}</td>
+      <td>${customer.bank_account_id}</td>
       <td>${customer.plan_id}</td>
     `;
     customersTableBody.appendChild(row);
@@ -35,6 +35,7 @@ const fetchBanks = async () => {
     const row = document.createElement('tr');
 
     row.innerHTML = `
+      <td>${bank.bank_account_id}</td>
       <td>${bank.account_number}</td>
       <td>${bank.balance}</td>
       <td>${bank.bank_name}</td>
@@ -63,6 +64,26 @@ const fetchPhonePlans = async () => {
     phonePlanstableBody.appendChild(row);
   });
 }
+
+const fetchPlanNames = async () => {
+  const response = await fetch("/plan_name");
+  const planNames = await response.json()
+
+  const planNamesTableBody = document.querySelector("#availablePlansTable tbody");
+  planNamesTableBody.innerHTML = '';
+
+  planNames.forEach(plan => {
+    const row = document.createElement('tr');
+
+    row.innerHTML = `
+      <td>${plan.plan_name}</td>
+      <td>${plan.plan_cost}</td>
+      <td>${plan.cost_frequency}</td>
+    `;
+    planNamesTableBody.appendChild(row);
+  });
+}
+
 
 document.getElementById('create-customer-form').addEventListener('submit', async function(event) {
   event.preventDefault(); // Prevent default form submission
@@ -150,6 +171,53 @@ document.getElementById('delete-customer-form').addEventListener('submit', async
 
 })
 
+document.getElementById('minutes-cost-customer-form').addEventListener('submit', async function(event){
+  event.preventDefault();
+  const formData = new FormData(this);
+  const formObject = Object.fromEntries(formData.entries());
+  const resultTable = document.getElementById('minutesCostTable');
+  try{
+    const response = await fetch(`/minutes_cost/${formObject.minutes_cost_customer_id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (response.ok) {
+      const data = await response.json()
+
+      if(data.length > 0){
+        resultTable.innerHTML = ''
+        const customerData = data[0];
+        console.log(customerData)
+        resultTable.style.display = "table";
+        const row = document.createElement('tr');
+
+        resultTable.innerHTML = `
+        <tr>
+          <th>Cost</th>
+          <th>Minutes</th>
+        </tr>
+        <tr>
+          <td>$${customerData.total_logged_cost}</td>
+          <td>${customerData.total_logged_minutes}</td>
+        </tr>
+      `;
+      
+
+        resultTable.appendChild(row);
+      }      
+      this.reset(); 
+      setTimeout(() => {
+        document.getElementById('minutes_cost_statusMessage').style.display = "none"
+      }, 2000)
+    } else {
+      document.getElementById('minutes_cost_statusMessage').innerText = 'Failed to find customer.';
+    }
+  } catch (error){
+    console.error('Error:', error);
+    document.getElementById('minutes_cost_statusMessage').innerText = 'An error occurred. Please try again.';
+  }
+})
+
 document.querySelector(".delete-all-customers").addEventListener('click', async () => {
   try{
     const response = await fetch(`/delete_all_customers/`, {
@@ -176,6 +244,7 @@ const updateTables = () => {
   fetchCustomers()
   fetchBanks()
   fetchPhonePlans()
+  fetchPlanNames()
 }
 
 window.onload = () => {

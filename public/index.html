@@ -48,10 +48,9 @@
 
             <label for="plan_id">Phone Plan:</label><br />
             <select name="plan_id" id="plan_id" >
-              <option value="Plan 1">Plan 1</option>
-              <option value="Plan 2">Plan 2</option>
-              <option value="Plan 3">Plan 3</option>
-              <option value="Plan 4">Plan 4</option>
+              <option value="Basic">Basic</option>
+              <option value="Standard">Standard</option>
+              <option value="Premium">Premium</option>
             </select><br><br>
 
             <input type="submit" class="btn" value="Create Customer" />
@@ -108,10 +107,9 @@
 
             <label for="update_plan_id">Phone Plan:</label><br />
             <select name="update_plan_id" id="update_plan_id" >
-              <option value="Plan 1">Plan 1</option>
-              <option value="Plan 2">Plan 2</option>
-              <option value="Plan 3">Plan 3</option>
-              <option value="Plan 4">Plan 4</option>
+              <option value="Basic">Basic</option>
+              <option value="Standard">Standard</option>
+              <option value="Premium">Premium</option>
             </select><br><br>
 
             <input type="submit" class="btn" value="Update Customer" />
@@ -131,6 +129,23 @@
 
             <input type="submit" class="btn" value="Delete customer" />
             <div id="delete_statusMessage" style="display: none"></div>
+          </form>
+        </div>
+        <div class="minutes-cost-customer">
+          <form action="/minutes_cost_customer" method="get" id="minutes-cost-customer-form">
+            <h2>Customer Minutes|Cost</h2>
+            <label for="minutes_cost_customer_id">Customer ID:</label><br />
+            <input
+              type="text"
+              id="minutes_cost_customer_id"
+              name="minutes_cost_customer_id"
+              required
+            /><br /><br />
+
+            <input type="submit" class="btn" value="Check" />
+            <table id="minutesCostTable"  style="border: solid black 1px; display: none;">
+            </table>
+            <div id="minutes_cost_statusMessage" style="display: none"></div>
           </form>
         </div>
       </div>
@@ -159,6 +174,7 @@
         <table id="bankTable" style="border: solid black 1px">
           <thead>
             <tr>
+              <th>Bank Account ID</th>
               <th>Account Number</th>
               <th>Balance</th>
               <th>Bank Name</th>
@@ -179,6 +195,21 @@
               <th>Data Type</th>
               <th>Call Minutes</th>
               <th>Plan Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JavaScript will populate this -->
+          </tbody>
+        </table>
+      </div>
+      <div class="available-plans-list">
+        <h2>Available Plans Table List</h2>
+        <table id="availablePlansTable" style="border: solid black 1px">
+          <thead>
+            <tr>
+              <th>Plan Name</th>
+              <th>Plan Cost</th>
+              <th>Plan Frequency</th>
             </tr>
           </thead>
           <tbody>
