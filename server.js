@@ -85,7 +85,7 @@ app.put("/create_tables", async (req, res) => {
       await client.query(`
         DROP TABLE IF EXISTS "call_record" CASCADE;
         DROP TABLE IF EXISTS "payment" CASCADE;
-        DROP TABLE IF EXISTS "customers" CASCADE;
+        DROP TABLE IF EXISTS "customer" CASCADE;
         DROP TABLE IF EXISTS "bank_account" CASCADE;
         DROP TABLE IF EXISTS "plan_name" CASCADE;
         DROP TABLE IF EXISTS "phone_plan" CASCADE;
@@ -115,7 +115,7 @@ app.put("/create_tables", async (req, res) => {
           FOREIGN KEY (Plan_Name) REFERENCES "plan_name" (Plan_name)
         );
 
-        CREATE TABLE "customers" (
+        CREATE TABLE "customer" (
           Customer_ID SERIAL PRIMARY KEY,
           First_name VARCHAR(50) NOT NULL,
           Last_name VARCHAR(50) NOT NULL,
@@ -136,7 +136,7 @@ app.put("/create_tables", async (req, res) => {
           Cost INT NOT NULL,
           Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           Customer_ID INT NOT NULL,
-          FOREIGN KEY (Customer_ID) REFERENCES "customers" (Customer_ID)
+          FOREIGN KEY (Customer_ID) REFERENCES "customer" (Customer_ID)
         );
 
         CREATE TABLE "payment" (
@@ -147,7 +147,7 @@ app.put("/create_tables", async (req, res) => {
           Customer_ID INT NOT NULL,
           Bank_ID INT NOT NULL,
           Plan_ID INT NOT NULL,
-          FOREIGN KEY (Customer_ID) REFERENCES "customers" (Customer_ID),
+          FOREIGN KEY (Customer_ID) REFERENCES "customer" (Customer_ID),
           FOREIGN KEY (Plan_ID) REFERENCES "phone_plan" (Plan_ID)
         );
       `);
@@ -178,7 +178,7 @@ app.put("/initialize_tables", async (req, res) => {
     await client.query(`
       TRUNCATE TABLE "call_record" CASCADE;
       TRUNCATE TABLE "payment" CASCADE;
-      TRUNCATE TABLE "customers" CASCADE;
+      TRUNCATE TABLE "customer" CASCADE;
       TRUNCATE TABLE "bank_account" CASCADE;
       TRUNCATE TABLE "plan_name" CASCADE;
       TRUNCATE TABLE "phone_plan" CASCADE;
@@ -220,9 +220,9 @@ app.put("/initialize_tables", async (req, res) => {
         ('5G', 1200, 'Premium');
     `);
 
-    // Insert data into customers table
+    // Insert data into customer table
     await client.query(`
-      INSERT INTO "customers" (First_name, Last_name, Email, Phone_number, bank_account_id, Plan_ID) VALUES
+      INSERT INTO "customer" (First_name, Last_name, Email, Phone_number, bank_account_id, Plan_ID) VALUES
         ('Alice', 'Anderson', 'alice.anderson@example.com', '(123)-456-7890', 1, 1),
         ('Bob', 'Brown', 'bob.brown@example.com', '(234)-567-8901', 2, 2),
         ('Charlie', 'Clark', 'charlie.clark@example.com', '(345)-678-9012', 3, 3),
@@ -285,9 +285,9 @@ app.put("/initialize_tables", async (req, res) => {
 
 
 
-app.get("/customers", async (req, res) => {
+app.get("/customer", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM customers");
+    const result = await pool.query("SELECT * FROM customer");
     res.json(result.rows);
   } catch (err) {
     console.error(err.message);
@@ -356,7 +356,7 @@ app.get("/minutes_cost/:minutes_cost_customer_id", async (req, res) => {
       SUM(cr.Duration) AS Total_Logged_Minutes,
       SUM(cr.Cost) AS Total_Logged_Cost
     FROM 
-      customers c
+      customer c
     JOIN 
       call_record cr ON c.Customer_ID = cr.Customer_ID
     WHERE 
@@ -389,7 +389,7 @@ app.get("/customer_standing", async (req, res) => {
           ELSE 'Good Standing'
         END as account_status
       FROM 
-        customers c
+        customer c
         JOIN bank_account b ON c.bank_account_id = b.bank_account_id  -- Corrected join condition
         JOIN phone_plan p ON c.plan_id = p.plan_id
         JOIN plan_name pn ON p.plan_name = pn.plan_name
@@ -408,22 +408,22 @@ app.get("/monthly_revenue", async (req, res) => {
     const result = await pool.query(
       `SELECT 
         pn.plan_name,
-        COUNT(c.customer_id) as number_of_customers,
+        COUNT(c.customer_id) as number_of_customer,
         pn.plan_cost as cost_per_customer,
         COUNT(c.customer_id) * pn.plan_cost as monthly_revenue_per_plan,
         (SELECT 
-          SUM(plan_cost * counted_customers) 
+          SUM(plan_cost * counted_customer) 
         FROM 
           (SELECT 
-            COUNT(customers.customer_id) as counted_customers,
+            COUNT(customer.customer_id) as counted_customer,
             plan_name.plan_cost
-          FROM customers
-          JOIN phone_plan ON customers.plan_id = phone_plan.plan_id
+          FROM customer
+          JOIN phone_plan ON customer.plan_id = phone_plan.plan_id
           JOIN plan_name ON phone_plan.plan_name = plan_name.plan_name
           GROUP BY plan_name.plan_cost) as total
         ) as total_monthly_revenue
       FROM 
-        customers c
+        customer c
         JOIN phone_plan p ON c.plan_id = p.plan_id
         JOIN plan_name pn ON p.plan_name = pn.plan_name
       GROUP BY 
@@ -468,9 +468,9 @@ app.put("/update_customer/:customer_id", async (req, res) => {
       [update_plan_id, plan_cost, cost_frequency]
     );
 
-    // Step 1: Retrieve the bank_account_id from the customers table
+    // Step 1: Retrieve the bank_account_id from the customer table
     const customerResult = await client.query(
-      `SELECT bank_account_id FROM customers WHERE Customer_ID = $1::INT`,
+      `SELECT bank_account_id FROM customer WHERE Customer_ID = $1::INT`,
       [customer_id]
     );
 
@@ -494,16 +494,16 @@ app.put("/update_customer/:customer_id", async (req, res) => {
       `UPDATE phone_plan
        SET Plan_Name = $1::VARCHAR
        WHERE Plan_ID = (
-         SELECT Plan_ID FROM customers WHERE Customer_ID = $2::INT
+         SELECT Plan_ID FROM customer WHERE Customer_ID = $2::INT
        )
        RETURNING Plan_ID`,
       [update_plan_id, customer_id]
     );
     const generatedPlanId = phonePlanResult.rows[0].plan_id;
 
-    // Step 4: Update customers table with the new values
+    // Step 4: Update customer table with the new values
     await client.query(
-      `UPDATE customers
+      `UPDATE customer
        SET First_name = $1::VARCHAR, Last_name = $2::VARCHAR, Email = $3::VARCHAR, 
            Phone_number = $4::VARCHAR, bank_account_id = $5::INT, Plan_ID = $6::INT
        WHERE Customer_ID = $7::INT`,
@@ -539,7 +539,7 @@ app.delete("/delete_customer/:customer_id", async (req, res) => {
     await client.query("BEGIN");
 
     const customerResult = await client.query(
-      `SELECT bank_account_id, plan_id FROM customers WHERE customer_id = $1`,
+      `SELECT bank_account_id, plan_id FROM customer WHERE customer_id = $1`,
       [customer_id]
     );
 
@@ -561,7 +561,7 @@ app.delete("/delete_customer/:customer_id", async (req, res) => {
     ]);
 
     //Delete the customer
-    await client.query(`DELETE FROM customers WHERE customer_id = $1`, [
+    await client.query(`DELETE FROM customer WHERE customer_id = $1`, [
       customer_id,
     ]);
 
@@ -590,25 +590,25 @@ app.delete("/delete_all_customers", async (req, res) => {
     const deleteQuery = `
       WITH deleted_call_records AS (
         DELETE FROM call_record
-        WHERE customer_id IN (SELECT customer_id FROM customers)
+        WHERE customer_id IN (SELECT customer_id FROM customer)
       ),
       deleted_payments AS (
         DELETE FROM payment
-        WHERE customer_id IN (SELECT customer_id FROM customers)
+        WHERE customer_id IN (SELECT customer_id FROM customer)
       ),
       
-      deleted_customers AS (
-        DELETE FROM customers 
+      deleted_customer AS (
+        DELETE FROM customer 
         RETURNING bank_account_id, Plan_ID
       ),
       
       deleted_bank AS (
         DELETE FROM bank_account 
-        WHERE bank_account_id IN (SELECT bank_account_id FROM deleted_customers)
+        WHERE bank_account_id IN (SELECT bank_account_id FROM deleted_customer)
       )
       
       DELETE FROM phone_plan 
-      WHERE Plan_ID IN (SELECT Plan_ID FROM deleted_customers);
+      WHERE Plan_ID IN (SELECT Plan_ID FROM deleted_customer);
     `;
 
     await pool.query(deleteQuery);
@@ -679,7 +679,7 @@ app.post("/submit_customer", async (req, res) => {
     const generatedPlanId = phonePlanResult.rows[0].plan_id;
 
     await client.query(
-      `INSERT INTO customers (First_name, Last_name, Email, Phone_number, bank_account_id, Plan_ID) 
+      `INSERT INTO customer (First_name, Last_name, Email, Phone_number, bank_account_id, Plan_ID) 
        VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         first_name,

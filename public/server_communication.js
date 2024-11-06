@@ -36,7 +36,7 @@ const initializeTables = async () => {
 }
 
 const fetchCustomers = async () => {
-  const response = await fetch("/customers");
+  const response = await fetch("/customer");
   const customers = await response.json();
 
   const customersTableBody = document.querySelector("#customersTable tbody");
