@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const path = require("path");
 const cors = require("cors");
+const { faker } = require("@faker-js/faker");
 
 const app = express();
 app.use(bodyParser.json());
@@ -18,7 +19,7 @@ async function connectOrCreateDatabase() {
     pool = new Pool({
       user: "postgres",
       host: "localhost",
-      database: "phone_company",  
+      database: "phone_company",
       password: "8508",
       port: 5432,
     });
@@ -29,7 +30,9 @@ async function connectOrCreateDatabase() {
     console.log("Connected to existing 'phone_company' database.");
   } catch (error) {
     // If connection fails, create the database
-    console.error("Database 'phone_company' does not exist. Attempting to create it...");
+    console.error(
+      "Database 'phone_company' does not exist. Attempting to create it..."
+    );
     await createDatabase(); // Call createDatabase function to create the database
 
     pool = new Pool({
@@ -48,7 +51,7 @@ async function createDatabase() {
   const defaultPool = new Pool({
     user: "postgres",
     host: "localhost",
-    database: "postgres",  
+    database: "postgres",
     password: "8508",
     port: 5432,
   });
@@ -66,14 +69,11 @@ async function createDatabase() {
   }
 }
 
-// Call connectOrCreateDatabase to either connect to or create the database
 connectOrCreateDatabase()
   .then(() => {
     console.log("Database setup complete.");
-    // Proceed with application logic here
   })
   .catch((error) => console.error("Database setup failed:", error));
-
 
 app.put("/create_tables", async (req, res) => {
   try {
@@ -83,72 +83,85 @@ app.put("/create_tables", async (req, res) => {
 
       // Drop tables if they exist
       await client.query(`
-        DROP TABLE IF EXISTS "call_record" CASCADE;
-        DROP TABLE IF EXISTS "payment" CASCADE;
-        DROP TABLE IF EXISTS "customer" CASCADE;
-        DROP TABLE IF EXISTS "bank_account" CASCADE;
-        DROP TABLE IF EXISTS "plan_name" CASCADE;
-        DROP TABLE IF EXISTS "phone_plan" CASCADE;
+        DROP TABLE IF EXISTS "customer";
+        DROP TABLE IF EXISTS "bank_account";
+        DROP TABLE IF EXISTS "plan";
+        DROP TABLE IF EXISTS "call_record";
+        DROP TABLE IF EXISTS "payment";
+        DROP TABLE IF EXISTS "transaction";
       `);
 
       // Create tables
       await client.query(`
-        CREATE TABLE "plan_name" (
-          Plan_name VARCHAR(50) PRIMARY KEY,
-          Plan_cost DOUBLE PRECISION NOT NULL,
-          Cost_frequency INT NOT NULL
-        );
-
-        CREATE TABLE "bank_account" (
-          bank_account_id SERIAL PRIMARY KEY,
-          Account_number INT UNIQUE NOT NULL,
-          Balance INT NOT NULL,
-          Bank_name VARCHAR(50) NOT NULL,
-          Bank_log VARCHAR(50) NOT NULL
-        );
-
-        CREATE TABLE "phone_plan" (
-          Plan_ID SERIAL PRIMARY KEY,
-          Data_type VARCHAR(50) NOT NULL,
-          Call_Minutes INT NOT NULL,
-          Plan_Name VARCHAR(50) NOT NULL,
-          FOREIGN KEY (Plan_Name) REFERENCES "plan_name" (Plan_name)
+        CREATE TABLE "plan" (
+          Plan_ID SERIAL PRIMARY KEY, 
+          Plan_Name CHAR(50) NOT NULL, 
+          Data_type CHAR(5) NOT NULL, 
+          Call_Minutes INT NOT NULL, 
+          Data_Limit DOUBLE PRECISION DEFAULT 0.0,
+          Data_Overage_Cost DOUBLE PRECISION DEFAULT 0.0,
+          Plan_Cost DOUBLE PRECISION NOT NULL,
+          Cost_Frequency INT NOT NULL, 
+          Plan_Type CHAR(10) NOT NULL CHECK (Plan_Type IN ('Prepaid', 'Postpaid')) 
         );
 
         CREATE TABLE "customer" (
           Customer_ID SERIAL PRIMARY KEY,
-          First_name VARCHAR(50) NOT NULL,
-          Last_name VARCHAR(50) NOT NULL,
-          Email VARCHAR(100) UNIQUE NOT NULL,
-          Phone_number VARCHAR(15) UNIQUE,
+          First_name CHAR(50) NOT NULL,
+          Last_name CHAR(50) NOT NULL,
+          Email CHAR(100) UNIQUE NOT NULL,
+          Phone_number CHAR(20) UNIQUE NOT NULL,
           Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          bank_account_id INT NOT NULL,
+          Account_number INT, 
           Plan_ID INT NOT NULL,
-          FOREIGN KEY (bank_account_id) REFERENCES "bank_account" (bank_account_id),
-          FOREIGN KEY (Plan_ID) REFERENCES "phone_plan" (Plan_ID)
+          Bill_Amount DOUBLE PRECISION DEFAULT 0.0,
+          Billing_Status CHAR(10) DEFAULT 'Unpaid' CHECK (Billing_Status IN ('Paid', 'Unpaid')),
+          FOREIGN KEY (Plan_ID) REFERENCES "plan" (Plan_ID)
+        );
+
+        CREATE TABLE "bank_account" (
+          Account_number INT PRIMARY KEY, 
+          Balance INT NOT NULL,
+          Bank_name CHAR(50) NOT NULL,
+          Bank_log CHAR(50) NOT NULL,
+          Customer_ID INT UNIQUE NOT NULL,
+          FOREIGN KEY (Customer_ID) REFERENCES "customer" (Customer_ID) ON DELETE CASCADE
         );
 
         CREATE TABLE "call_record" (
-          Call_ID SERIAL PRIMARY KEY,
-          Call_start TIMESTAMP,
+          Phone_number CHAR(15), 
+          Call_start TIMESTAMP,  
           Call_end TIMESTAMP,
-          Duration INT NOT NULL,
-          Cost INT NOT NULL,
+          Duration INT NOT NULL, 
+          Data_Usage DOUBLE PRECISION DEFAULT 0.0, 
+          Cost DOUBLE PRECISION NOT NULL,
           Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          Customer_ID INT NOT NULL,
-          FOREIGN KEY (Customer_ID) REFERENCES "customer" (Customer_ID)
+          PRIMARY KEY (Phone_number, Call_start), 
+          FOREIGN KEY (Phone_number) REFERENCES "customer" (Phone_number)
         );
 
         CREATE TABLE "payment" (
           Payment_ID SERIAL PRIMARY KEY,
           Amount DOUBLE PRECISION NOT NULL,
-          Payment_Date TIMESTAMP,
-          Company_Balance FLOAT NOT NULL,
+          Payment_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          Payment_Type CHAR(10) NOT NULL CHECK (Payment_Type IN ('Automatic', 'Manual')),
+          Card_Type CHAR(10) NOT NULL CHECK (Card_Type IN ('Credit', 'Debit')),
+          Card_Number CHAR(16) NOT NULL,
+          Company_Balance DOUBLE PRECISION NOT NULL,
           Customer_ID INT NOT NULL,
-          Bank_ID INT NOT NULL,
           Plan_ID INT NOT NULL,
           FOREIGN KEY (Customer_ID) REFERENCES "customer" (Customer_ID),
-          FOREIGN KEY (Plan_ID) REFERENCES "phone_plan" (Plan_ID)
+          FOREIGN KEY (Plan_ID) REFERENCES "plan" (Plan_ID)
+        );
+
+        CREATE TABLE "transaction" (
+          Transaction_ID SERIAL PRIMARY KEY, 
+          Transaction_Type CHAR(15) NOT NULL CHECK (Transaction_Type IN ('Payment', 'Call', 'Data Usage', 'Plan Change')), -- Type of transaction
+          Transaction_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+          Transaction_Duration BIGINT NOT NULL,
+          Customer_ID INT NOT NULL, 
+          Related_Entity_ID INT, 
+          FOREIGN KEY (Customer_ID) REFERENCES "customer" (Customer_ID)
         );
       `);
 
@@ -178,97 +191,153 @@ app.put("/initialize_tables", async (req, res) => {
     await client.query(`
       TRUNCATE TABLE "call_record" CASCADE;
       TRUNCATE TABLE "payment" CASCADE;
-      TRUNCATE TABLE "customer" CASCADE;
       TRUNCATE TABLE "bank_account" CASCADE;
-      TRUNCATE TABLE "plan_name" CASCADE;
-      TRUNCATE TABLE "phone_plan" CASCADE;
+      TRUNCATE TABLE "plan" CASCADE;
+      TRUNCATE TABLE "transaction" CASCADE;
+      TRUNCATE TABLE "customer" CASCADE;
     `);
 
-    // Insert data into plan_name table
-    await client.query(`
-      INSERT INTO "plan_name" (Plan_name, Plan_cost, Cost_frequency) VALUES 
-        ('Basic', 10.99, 12),
-        ('Standard', 29.99, 12),
-        ('Premium', 49.99, 12);
-    `);
+    const plans = [
+      ["Basic Plan", "4G", 500, 1024, 0.05, 10.0, 30, "Prepaid"],
+      ["Unlimited Plan", "5G", -1, -1, 0.0, 50.0, 30, "Postpaid"], // Unlimited calls and data
+      ["Family Plan", "4G", 1000, 5000, 0.02, 30.0, 30, "Postpaid"],
+    ];
 
-    // Insert data into bank_account table
-    await client.query(`
-      INSERT INTO "bank_account" (Account_number, Balance, Bank_name, Bank_log) VALUES
-        (100, 1000, 'Bank A', '+1000'),
-        (101, 1500, 'Bank B', '+1500'),
-        (102, 2000, 'Bank C', '+2000'),
-        (103, 2500, 'Bank D', '+2500'),
-        (104, 3000, 'Bank E', '+3000'),
-        (105, 3500, 'Bank F', '+3500'),
-        (106, 4000, 'Bank G', '+4000'),
-        (107, 4500, 'Bank H', '+4500'),
-        (108, 5000, 'Bank I', '+5000');
-    `);
+    // Insert data into plan table
+    for (const plan of plans) {
+      await client.query(
+        `INSERT INTO plan (Plan_Name, Data_type, Call_Minutes, Data_Limit, Data_Overage_Cost, Plan_Cost, Cost_Frequency, Plan_Type) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        plan
+      );
+    }
 
-    // Insert data into phone_plan table
-    await client.query(`
-      INSERT INTO "phone_plan" (Data_type, Call_Minutes, Plan_Name) VALUES
-        ('4G', 300, 'Basic'),
-        ('4G', 600, 'Standard'),
-        ('5G', 1200, 'Premium'),
-        ('4G', 300, 'Basic'),
-        ('4G', 600, 'Standard'),
-        ('5G', 1200, 'Premium'),
-        ('4G', 300, 'Basic'),
-        ('4G', 600, 'Standard'),
-        ('5G', 1200, 'Premium');
-    `);
+    // Generate unique account numbers
+    const accountNumbers = [];
+    for (let i = 0; i < 100; i++) {
+      let accountNumber = faker.number.int({ min: 100000000, max: 999999999 });
+      while (accountNumbers.includes(accountNumber)) {
+        accountNumber = faker.number.int({ min: 100000000, max: 999999999 });
+      }
+      accountNumbers.push(accountNumber);
+    }
 
-    // Insert data into customer table
-    await client.query(`
-      INSERT INTO "customer" (First_name, Last_name, Email, Phone_number, bank_account_id, Plan_ID) VALUES
-        ('Alice', 'Anderson', 'alice.anderson@example.com', '(123)-456-7890', 1, 1),
-        ('Bob', 'Brown', 'bob.brown@example.com', '(234)-567-8901', 2, 2),
-        ('Charlie', 'Clark', 'charlie.clark@example.com', '(345)-678-9012', 3, 3),
-        ('Diana', 'Davis', 'diana.davis@example.com', '(456)-789-0123', 4, 4),
-        ('Evan', 'Evans', 'evan.evans@example.com', '(567)-890-1234', 5, 5),
-        ('Fay', 'Foster', 'fay.foster@example.com', '(678)-901-2345', 6, 6),
-        ('George', 'Green', 'george.green@example.com', '(789)-012-3456', 7, 7),
-        ('Holly', 'Hall', 'holly.hall@example.com', '(890)-123-4567', 8, 8),
-        ('Ian', 'Irwin', 'ian.irwin@example.com', '(901)-234-5678', 9, 9);
-    `);
+    /// Insert customers and generate bank accounts
+    const customerData = [];
+    let phoneNumbers = [];
+    for (let i = 0; i < 100; i++) {
+      // Insert customer
+      const firstName = faker.person.firstName();
+      const lastName = faker.person.lastName();
+      const email = faker.internet.email({ firstName, lastName });
+      let phoneNumber = faker.number
+        .int({ min: 1111111111, max: 9999999999 })
+        .toString();
+      while (phoneNumbers.includes(phoneNumber)) {
+        phoneNumber = faker.number
+          .int({ min: 1111111111, max: 9999999999 })
+          .toString();
+      }
+      phoneNumbers.push(phoneNumber);
 
-    // Insert data into call_record table
-    await client.query(`
-      INSERT INTO call_record (Call_start, Call_End, Duration, Cost, Date, Customer_ID)
-      VALUES
-        ('2023-10-01 08:15:00', '2023-10-01 08:45:00', 30, 2.50, '2023-10-01', 1),
-        ('2023-10-01 09:20:00', '2023-10-01 09:35:00', 15, 1.25, '2023-10-01', 2),
-        ('2023-10-02 10:05:00', '2023-10-02 10:50:00', 45, 3.75, '2023-10-02', 3),
-        ('2023-10-02 14:35:00', '2023-10-02 15:00:00', 25, 2.10, '2023-10-02', 4),
-        ('2023-10-03 16:45:00', '2023-10-03 17:00:00', 15, 1.20, '2023-10-03', 5),
-        ('2023-10-04 11:30:00', '2023-10-04 12:15:00', 45, 3.60, '2023-10-04', 6),
-        ('2023-10-04 18:10:00', '2023-10-04 18:35:00', 25, 2.15, '2023-10-04', 7),
-        ('2023-10-05 09:50:00', '2023-10-05 10:20:00', 30, 2.50, '2023-10-05', 8),
-        ('2023-10-05 13:25:00', '2023-10-05 13:45:00', 20, 1.65, '2023-10-05', 9),
-        ('2023-10-06 07:40:00', '2023-10-06 08:10:00', 30, 2.50, '2023-10-06', 1),
-        ('2023-10-06 20:15:00', '2023-10-06 20:30:00', 15, 1.25, '2023-10-06', 2),
-        ('2023-10-07 15:55:00', '2023-10-07 16:20:00', 25, 2.10, '2023-10-07', 3),
-        ('2023-10-07 21:00:00', '2023-10-07 21:45:00', 45, 3.75, '2023-10-07', 4),
-        ('2023-10-08 06:30:00', '2023-10-08 07:00:00', 30, 2.50, '2023-10-08', 5),
-        ('2023-10-08 19:45:00', '2023-10-08 20:00:00', 15, 1.25, '2023-10-08', 6);
-    `);
+      const accountNumber = faker.number.int({
+        min: 100000000,
+        max: 999999999,
+      });
 
-    // Insert data into payment table
-    await client.query(`
-      INSERT INTO payment (Amount, Payment_Date, Company_Balance, Customer_ID, Bank_ID, Plan_ID)
-      VALUES
-        (10.99, '2023-10-01', 1010.99, 1, 1, 1),
-        (29.99, '2023-10-02', 1040.98, 2, 2, 2),
-        (49.99, '2023-10-03', 1090.97, 3, 3, 3),
-        (10.99, '2023-10-04', 1101.96, 4, 4, 4),
-        (29.99, '2023-10-05', 1131.95, 5, 5, 5),
-        (49.99, '2023-10-06', 1181.94, 6, 6, 6),
-        (10.99, '2023-10-07', 1192.93, 7, 7, 7),
-        (29.99, '2023-10-08', 1222.92, 8, 8, 8),
-        (49.99, '2023-10-09', 1272.91, 9, 9, 9);
-    `);
+      const createdAt = faker.date.past({ years: 2 });
+      const planId = Math.floor(Math.random() * 3) + 1; // Random plan ID between 1 and 3
+      let billAmount = faker.number.float({ min: 0, max: 100 });
+      billAmount = Number(billAmount.toFixed(2));
+      const billingStatus = faker.helpers.arrayElement(["Paid", "Unpaid"]);
+
+      const result = await client.query(
+        `INSERT INTO customer (First_name, Last_name, Email, Phone_number, Created_at, Account_number, Plan_ID, Bill_Amount, Billing_Status) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING Customer_ID`,
+        [
+          firstName,
+          lastName,
+          email,
+          phoneNumber,
+          createdAt,
+          accountNumber,
+          planId,
+          billAmount,
+          billingStatus,
+        ]
+      );
+
+      // Store customer data for later use
+      const customerId = result.rows[0].customer_id;
+      customerData.push({
+        Customer_ID: customerId,
+        Phone_number: phoneNumber,
+        Plan_ID: planId
+      });
+
+      // Insert corresponding bank account
+      const balance = faker.number.int({ min: 0, max: 10000 });
+      const bankName = faker.company.name();
+      const bankLog = faker.lorem.words(3);
+
+      await client.query(
+        `INSERT INTO bank_account (Account_number, Balance, Bank_name, Bank_log, Customer_ID) 
+        VALUES ($1, $2, $3, $4, $5)`,
+        [accountNumber, balance, bankName, bankLog, customerId]
+      );
+    }
+
+    // Insert 100 call records
+    for (let i = 0; i < 100; i++) {
+      const callStart = faker.date.recent({ days: 30 }); // Call within the last 30 days
+      const duration = faker.number.int({ min: 30, max: 3600 }); // Call duration between 30 seconds and 1 hour
+      const callEnd = new Date(callStart.getTime() + duration * 1000); // Add duration in seconds
+      const dataUsage = faker.number.float({ min: 0, max: 50 }); // Random data usage in MB
+      const cost = Number(faker.number.float({ min: 0.1, max: 10 }).toFixed(2)); // Call cost between $0.1 and $10
+
+      await client.query(
+        `INSERT INTO call_record (Phone_number, Call_start, Call_end, Duration, Data_Usage, Cost, Date) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          faker.helpers.arrayElement(phoneNumbers),
+          callStart,
+          callEnd,
+          duration,
+          dataUsage,
+          cost,
+          new Date(),
+        ]
+      );
+    }
+
+    // Insert 100 payment records
+    for (let i = 0; i < 100; i++) {
+      const customer = faker.helpers.arrayElement(customerData);
+      const amount = Number(
+        faker.number.float({ min: 5, max: 200 }).toFixed(2)
+      ); // Payment amount
+      const paymentDate = faker.date.recent({ days: 60 }); // Payment in the last 60 days
+      const paymentType = faker.helpers.arrayElement(["Automatic", "Manual"]);
+      const cardType = faker.helpers.arrayElement(["Credit", "Debit"]);
+      const cardNumber = faker.number
+        .int({ min: 1000000000000000, max: 9999999999999999 })
+        .toString();
+
+      await client.query(
+        `INSERT INTO payment (Amount, Payment_Date, Payment_Type, Card_Type, Card_Number, Company_Balance, Customer_ID, Plan_ID) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          amount,
+          paymentDate,
+          paymentType,
+          cardType,
+          cardNumber,
+          Number(faker.number.float({ min: 1000, max: 10000 }).toFixed(2)), // Company balance
+          customer.Customer_ID,
+          customer.Plan_ID,
+        ]
+      );
+    }
 
     await client.query("COMMIT");
     console.log("Initial data inserted successfully!");
@@ -281,9 +350,6 @@ app.put("/initialize_tables", async (req, res) => {
     client.release();
   }
 });
-
-
-
 
 app.get("/customer", async (req, res) => {
   try {
@@ -307,17 +373,7 @@ app.get("/banks", async (req, res) => {
 
 app.get("/phone_plans", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM phone_plan");
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err.message);
-    res.sendStatus(500);
-  }
-});
-
-app.get("/plan_name", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM plan_name");
+    const result = await pool.query("SELECT * FROM plan");
     res.json(result.rows);
   } catch (err) {
     console.error(err.message);
@@ -345,100 +401,99 @@ app.get("/payment", async (req, res) => {
   }
 });
 
-app.get("/minutes_cost/:minutes_cost_customer_id", async (req, res) => {
-  const { minutes_cost_customer_id } = req.params;
-  try {
-    const result = await pool.query(
-      `SELECT 
-      c.Customer_ID,
-      c.First_name,
-      c.Last_name,
-      SUM(cr.Duration) AS Total_Logged_Minutes,
-      SUM(cr.Cost) AS Total_Logged_Cost
-    FROM 
-      customer c
-    JOIN 
-      call_record cr ON c.Customer_ID = cr.Customer_ID
-    WHERE 
-      c.Customer_ID = $1
-    GROUP BY 
-      c.Customer_ID, c.First_name, c.Last_name;
-    `,
-      [minutes_cost_customer_id]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err.message);
-    res.sendStatus(500);
-  }
-});
+// app.get("/minutes_cost/:minutes_cost_customer_id", async (req, res) => {
+//   const { minutes_cost_customer_id } = req.params;
+//   try {
+//     const result = await pool.query(
+//       `SELECT
+//       c.Customer_ID,
+//       c.First_name,
+//       c.Last_name,
+//       SUM(cr.Duration) AS Total_Logged_Minutes,
+//       SUM(cr.Cost) AS Total_Logged_Cost
+//     FROM
+//       customer c
+//     JOIN
+//       call_record cr ON c.Customer_ID = cr.Customer_ID
+//     WHERE
+//       c.Customer_ID = $1
+//     GROUP BY
+//       c.Customer_ID, c.First_name, c.Last_name;
+//     `,
+//       [minutes_cost_customer_id]
+//     );
+//     res.json(result.rows);
+//   } catch (err) {
+//     console.error(err.message);
+//     res.sendStatus(500);
+//   }
+// });
 
-app.get("/customer_standing", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT 
-        c.customer_id,
-        c.first_name || ' ' || c.last_name AS customer_name,
-        b.balance,
-        pn.plan_cost,
-        pn.cost_frequency,
-        FLOOR(b.balance / pn.plan_cost) as affordable_months,
-        CASE
-          WHEN b.balance < pn.plan_cost THEN 'Low Balance'
-          WHEN b.balance < pn.plan_cost * 3 THEN 'Warning'
-          ELSE 'Good Standing'
-        END as account_status
-      FROM 
-        customer c
-        JOIN bank_account b ON c.bank_account_id = b.bank_account_id  -- Corrected join condition
-        JOIN phone_plan p ON c.plan_id = p.plan_id
-        JOIN plan_name pn ON p.plan_name = pn.plan_name
-      ORDER BY 
-        affordable_months ASC;`
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err.message);
-    res.sendStatus(500);
-  }
-});
+// app.get("/customer_standing", async (req, res) => {
+//   try {
+//     const result = await pool.query(
+//       `SELECT
+//         c.customer_id,
+//         c.first_name || ' ' || c.last_name AS customer_name,
+//         b.balance,
+//         pn.plan_cost,
+//         pn.cost_frequency,
+//         FLOOR(b.balance / pn.plan_cost) as affordable_months,
+//         CASE
+//           WHEN b.balance < pn.plan_cost THEN 'Low Balance'
+//           WHEN b.balance < pn.plan_cost * 3 THEN 'Warning'
+//           ELSE 'Good Standing'
+//         END as account_status
+//       FROM
+//         customer c
+//         JOIN bank_account b ON c.bank_account_id = b.bank_account_id  -- Corrected join condition
+//         JOIN phone_plan p ON c.plan_id = p.plan_id
+//         JOIN plan_name pn ON p.plan_name = pn.plan_name
+//       ORDER BY
+//         affordable_months ASC;`
+//     );
+//     res.json(result.rows);
+//   } catch (err) {
+//     console.error(err.message);
+//     res.sendStatus(500);
+//   }
+// });
 
-app.get("/monthly_revenue", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT 
-        pn.plan_name,
-        COUNT(c.customer_id) as number_of_customer,
-        pn.plan_cost as cost_per_customer,
-        COUNT(c.customer_id) * pn.plan_cost as monthly_revenue_per_plan,
-        (SELECT 
-          SUM(plan_cost * counted_customer) 
-        FROM 
-          (SELECT 
-            COUNT(customer.customer_id) as counted_customer,
-            plan_name.plan_cost
-          FROM customer
-          JOIN phone_plan ON customer.plan_id = phone_plan.plan_id
-          JOIN plan_name ON phone_plan.plan_name = plan_name.plan_name
-          GROUP BY plan_name.plan_cost) as total
-        ) as total_monthly_revenue
-      FROM 
-        customer c
-        JOIN phone_plan p ON c.plan_id = p.plan_id
-        JOIN plan_name pn ON p.plan_name = pn.plan_name
-      GROUP BY 
-        pn.plan_name,
-        pn.plan_cost
-      ORDER BY 
-        monthly_revenue_per_plan DESC;`
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err.message);
-    res.sendStatus(500);
-  }
-});
-
+// app.get("/monthly_revenue", async (req, res) => {
+//   try {
+//     const result = await pool.query(
+//       `SELECT
+//         pn.plan_name,
+//         COUNT(c.customer_id) as number_of_customer,
+//         pn.plan_cost as cost_per_customer,
+//         COUNT(c.customer_id) * pn.plan_cost as monthly_revenue_per_plan,
+//         (SELECT
+//           SUM(plan_cost * counted_customer)
+//         FROM
+//           (SELECT
+//             COUNT(customer.customer_id) as counted_customer,
+//             plan_name.plan_cost
+//           FROM customer
+//           JOIN phone_plan ON customer.plan_id = phone_plan.plan_id
+//           JOIN plan_name ON phone_plan.plan_name = plan_name.plan_name
+//           GROUP BY plan_name.plan_cost) as total
+//         ) as total_monthly_revenue
+//       FROM
+//         customer c
+//         JOIN phone_plan p ON c.plan_id = p.plan_id
+//         JOIN plan_name pn ON p.plan_name = pn.plan_name
+//       GROUP BY
+//         pn.plan_name,
+//         pn.plan_cost
+//       ORDER BY
+//         monthly_revenue_per_plan DESC;`
+//     );
+//     res.json(result.rows);
+//   } catch (err) {
+//     console.error(err.message);
+//     res.sendStatus(500);
+//   }
+// });
 
 app.put("/update_customer/:customer_id", async (req, res) => {
   const { customer_id } = req.params;
@@ -584,7 +639,6 @@ app.delete("/delete_customer/:customer_id", async (req, res) => {
   }
 });
 
-
 app.delete("/delete_all_customers", async (req, res) => {
   try {
     const deleteQuery = `
@@ -618,7 +672,6 @@ app.delete("/delete_all_customers", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
 
 // Route to handle form submissions
 app.post("/submit_customer", async (req, res) => {

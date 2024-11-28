@@ -57,14 +57,14 @@
   margin-top:5vmin;
 }
 
-.customer-list, .bank-list, .phone-plan-list, .available-plans-list, .call-record-list, .payment-list{
+.customer-list, .bank-list, .phone-plan-list, .call-record-list, .payment-list{
   width: 90%;
   background-color: aliceblue;
   padding:1vmin;
   margin-top: 5vmin;
 }
 
-#customersTable, #bankTable, #phonePlanTable, #availablePlansTable, #minutesCostTable, #callRecordsTable, #paymentTable{
+#customersTable, #bankTable, #phonePlanTable, #minutesCostTable, #callRecordsTable, #paymentTable{
   width:100%;
   text-align: left;
 }

@@ -53,8 +53,10 @@ const fetchCustomers = async () => {
       <td>${customer.email}</td>
       <td>${customer.phone_number || "N/A"}</td>
       <td>${new Date(customer.created_at).toLocaleString()}</td>
-      <td>${customer.bank_account_id}</td>
+      <td>${customer.account_number}</td>
       <td>${customer.plan_id}</td>
+      <td>${customer.bill_amount}</td>
+      <td>${customer.billing_status}</td>
     `;
     customersTableBody.appendChild(row);
   });
@@ -71,11 +73,11 @@ const fetchBanks = async () => {
     const row = document.createElement("tr");
 
     row.innerHTML = `
-      <td>${bank.bank_account_id}</td>
       <td>${bank.account_number}</td>
       <td>${bank.balance}</td>
       <td>${bank.bank_name}</td>
       <td>${bank.bank_log}</td>
+      <td>${bank.customer_id}</td>
     `;
     banktableBody.appendChild(row);
   });
@@ -93,32 +95,15 @@ const fetchPhonePlans = async () => {
 
     row.innerHTML = `
       <td>${plan.plan_id}</td>
+      <td>${plan.plan_name}</td>
       <td>${plan.data_type}</td>
       <td>${plan.call_minutes}</td>
-      <td>${plan.plan_name}</td>
-    `;
-    phonePlanstableBody.appendChild(row);
-  });
-};
-
-const fetchPlanNames = async () => {
-  const response = await fetch("/plan_name");
-  const planNames = await response.json();
-
-  const planNamesTableBody = document.querySelector(
-    "#availablePlansTable tbody"
-  );
-  planNamesTableBody.innerHTML = "";
-
-  planNames.forEach((plan) => {
-    const row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${plan.plan_name}</td>
+      <td>${plan.data_limit}</td>
+      <td>${plan.data_overage_cost}</td>
       <td>${plan.plan_cost}</td>
       <td>${plan.cost_frequency}</td>
     `;
-    planNamesTableBody.appendChild(row);
+    phonePlanstableBody.appendChild(row);
   });
 };
 
@@ -133,13 +118,13 @@ const fetchCallRecord = async () => {
     const row = document.createElement("tr");
 
     row.innerHTML = `
-      <td>${record.call_id}</td>
-      <td>${record.call_start}</td>
-      <td>${record.call_end}</td>
+      <td>${record.phone_number}</td>
+      <td>${record.call_start.substring(record.call_start.indexOf('T'), record.call_start.length)}</td>
+      <td>${record.call_end.substring(record.call_end.indexOf('T'), record.call_end.length)}</td>
       <td>${record.duration}</td>
+      <td>${record.data_usage}</td>
       <td>${record.cost}</td>
-      <td>${record.date}</td>
-      <td>${record.customer_id}</td>
+      <td>${record.date.substring(0, record.date.indexOf('T'))}</td>
     `;
     callRecordTableBody.appendChild(row);
   });
@@ -158,10 +143,12 @@ const fetchPayment = async () => {
     row.innerHTML = `
       <td>${pay.payment_id}</td>
       <td>${pay.amount}</td>
-      <td>${pay.payment_date}</td>
+      <td>${pay.payment_date.substring(0, pay.payment_date.indexOf('T'))}</td>
+      <td>${pay.payment_type}</td>
+      <td>${pay.card_type}</td>
+      <td>${pay.card_number}</td>
       <td>${pay.company_balance}</td>
       <td>${pay.customer_id}</td>
-      <td>${pay.bank_id}</td>
       <td>${pay.plan_id}</td>
     `;
     paymentTableBody.appendChild(row);
@@ -200,7 +187,7 @@ const fetchMonthlyRevenue = async () => {
       <h3>${revenue.plan_name}</h3>
       <p>Cost per Customer: $${revenue.cost_per_customer}</p>
       <p>Monthly Revenue Per Plan: $${revenue.monthly_revenue_per_plan}</p>
-      <p>Number of Customers: ${revenue.number_of_customers}</p>
+      <p>Number of Customers: ${revenue.number_of_customer}</p>
       <p>Total Monthly Revenue: $${revenue.total_monthly_revenue.toFixed(2)}</p>
     `
     monthlyRevenueContainer.appendChild(section);
@@ -406,11 +393,10 @@ const updateTables = () => {
   fetchCustomers();
   fetchBanks();
   fetchPhonePlans();
-  fetchPlanNames();
   fetchCallRecord();
   fetchPayment();
-  fetchCustomerStanding();
-  fetchMonthlyRevenue()
+  // fetchCustomerStanding();
+  // fetchMonthlyRevenue()
 };
 
 document.querySelector(".create-tables-button").addEventListener('click', async () => {
@@ -431,3 +417,5 @@ document.querySelector(".initialize-data").addEventListener('click', async () =>
     document.querySelector(".initialize-data").style.display = "none"
   }
 });
+
+document.addEventListener('onwindowrelaod')
