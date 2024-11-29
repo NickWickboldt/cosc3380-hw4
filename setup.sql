@@ -34,7 +34,7 @@ CREATE TABLE "customer" (
     Email CHAR(100) UNIQUE NOT NULL,
     Phone_number CHAR(20) UNIQUE NOT NULL,
     Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    Account_number INT, 
+    Is_Busy BOOLEAN, 
     Plan_ID INT NOT NULL,
     Bill_Amount DOUBLE PRECISION DEFAULT 0.0,
     Billing_Status CHAR(10) DEFAULT 'Unpaid' CHECK (Billing_Status IN ('Paid', 'Unpaid')),

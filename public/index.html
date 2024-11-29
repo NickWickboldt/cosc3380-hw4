@@ -52,9 +52,9 @@
 
             <label for="plan_id">Phone Plan:</label><br />
             <select name="plan_id" id="plan_id" >
-              <option value="Basic">Basic</option>
-              <option value="Standard">Standard</option>
-              <option value="Premium">Premium</option>
+              <option value="1">Basic Plan</option>
+              <option value="2">Unlimited Plan</option>
+              <option value="3">Family Plan</option>
             </select><br><br>
 
             <input type="submit" class="btn" value="Create Customer" />
@@ -111,9 +111,9 @@
 
             <label for="update_plan_id">Phone Plan:</label><br />
             <select name="update_plan_id" id="update_plan_id" >
-              <option value="Basic">Basic</option>
-              <option value="Standard">Standard</option>
-              <option value="Premium">Premium</option>
+              <option value="1">Basic Plan</option>
+              <option value="2">Unlimited Plan</option>
+              <option value="3">Family Plan</option>
             </select><br><br>
 
             <input type="submit" class="btn" value="Update Customer" />
@@ -149,7 +149,9 @@
             <input type="submit" class="btn" value="Check" />
             <table id="minutesCostTable"  style="border: solid black 1px; display: none;">
             </table>
-            <div id="minutes_cost_statusMessage" style="display: none"></div>
+            <div id="minutes_cost_statusMessage" style="display: none">
+              
+            </div>
           </form>
         </div>
         <div class="check-standing-customer">
@@ -171,19 +173,6 @@
           <div id="monthlyRevenueContainer" style="border: solid black 1px">
 
           </div>
-          <!-- <table id="monthlyRevenueTable" style="border: solid black 1px">
-            <thead>
-              <tr>
-                <th>Plan Name</th>
-                <th># of Customers</th>
-                <th>Cost per Customer</th>
-                <th>Monthly Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-             JavaScript will populate this -->
-            <!-- </tbody> -->
-          <!-- </table> -->
         </div>
       </div>
       <div class="customer-list">
@@ -197,7 +186,7 @@
               <th>Email</th>
               <th>Phone Number</th>
               <th>Created At</th>
-              <th>Account Number</th>
+              <th>Is Busy?</th>
               <th>Plan ID</th>
               <th>Bill Amount</th>
               <th>Billing Status</th>

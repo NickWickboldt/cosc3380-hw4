@@ -53,7 +53,7 @@ const fetchCustomers = async () => {
       <td>${customer.email}</td>
       <td>${customer.phone_number || "N/A"}</td>
       <td>${new Date(customer.created_at).toLocaleString()}</td>
-      <td>${customer.account_number}</td>
+      <td>${customer.is_busy}</td>
       <td>${customer.plan_id}</td>
       <td>${customer.bill_amount}</td>
       <td>${customer.billing_status}</td>
@@ -180,18 +180,23 @@ const fetchMonthlyRevenue = async () => {
   const monthlyRevenueContainer = document.getElementById("monthlyRevenueContainer")
   monthlyRevenueContainer.innerHTML = ''
   revenueData.forEach(revenue => {
-    
+    console.log(revenue)
     let section = document.createElement('div');
 
     section.innerHTML = `
       <h3>${revenue.plan_name}</h3>
       <p>Cost per Customer: $${revenue.cost_per_customer}</p>
       <p>Monthly Revenue Per Plan: $${revenue.monthly_revenue_per_plan}</p>
-      <p>Number of Customers: ${revenue.number_of_customer}</p>
-      <p>Total Monthly Revenue: $${revenue.total_monthly_revenue.toFixed(2)}</p>
+      <p>Number of Customers: ${revenue.number_of_customers}</p>
     `
     monthlyRevenueContainer.appendChild(section);
   });
+  const totalRevenue = document.createElement('p');
+  totalRevenue.innerHTML = `
+    <hr>
+    <p>Total Monthly Revenue: $${revenueData[0].total_monthly_revenue.toFixed(2)}</p>
+  `
+  monthlyRevenueContainer.appendChild(totalRevenue)
 }
 
 document
@@ -322,10 +327,11 @@ document
       );
       if (response.ok) {
         const data = await response.json();
+        console.log(data)
 
-        if (data.length > 0) {
+        if (data) {
           resultTable.innerHTML = "";
-          const customerData = data[0];
+          const customerData = data;
           console.log(customerData);
           resultTable.style.display = "table";
           const row = document.createElement("tr");
@@ -336,8 +342,8 @@ document
           <th>Minutes</th>
         </tr>
         <tr>
-          <td>$${customerData.total_logged_cost}</td>
-          <td>${customerData.total_logged_minutes}</td>
+          <td>$${customerData.bill_amount}</td>
+          <td>${customerData.used_minutes}</td>
         </tr>
       `;
           resultTable.appendChild(row);
@@ -395,8 +401,8 @@ const updateTables = () => {
   fetchPhonePlans();
   fetchCallRecord();
   fetchPayment();
-  // fetchCustomerStanding();
-  // fetchMonthlyRevenue()
+  fetchCustomerStanding();
+  fetchMonthlyRevenue()
 };
 
 document.querySelector(".create-tables-button").addEventListener('click', async () => {
@@ -417,5 +423,3 @@ document.querySelector(".initialize-data").addEventListener('click', async () =>
     document.querySelector(".initialize-data").style.display = "none"
   }
 });
-
-document.addEventListener('onwindowrelaod')
