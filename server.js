@@ -157,7 +157,7 @@ app.put("/create_tables", async (req, res) => {
 
         CREATE TABLE "transaction" (
           Transaction_ID SERIAL PRIMARY KEY, 
-          Transaction_Type CHAR(15) NOT NULL,
+          Transaction_Type CHAR(20) NOT NULL,
           Transaction_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
           Transaction_Duration BIGINT NOT NULL,
           Customer_ID INT NOT NULL
@@ -508,6 +508,138 @@ app.get("/monthly_revenue", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
+app.get("/billing_status/:customer_id", async (req, res) => {
+  const { customer_id } = req.params;
+
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query(
+      `
+      SELECT Billing_Status, Bill_Amount
+      FROM customer
+      WHERE Customer_ID = $1
+      `,
+      [customer_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send("Customer not found");
+    }
+
+    const { billing_status, bill_amount } = result.rows[0];
+    res.status(200).json({ billing_status, bill_amount }); // Return as JSON
+  } catch (err) {
+    console.error("Error fetching billing status:", err.message);
+    res.sendStatus(500);
+  } finally {
+    client.release();
+  }
+});
+
+app.put("/make_payment/:customer_id", async (req, res) => {
+  const { customer_id } = req.params;
+  let {
+    make_payment_amount,
+    make_payment_card_type,
+    make_payment_card_number    
+  } = req.body; 
+
+  let payment_type = "Manual"
+  make_payment_amount = Number(make_payment_amount);
+  if (isNaN(make_payment_amount) || make_payment_amount <= 0) {
+    return res.status(400).send("Invalid payment amount. Must be a positive number.");
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+    const startTime = Date.now()
+
+    const customerResult = await client.query(
+      `
+      SELECT 
+        c.Bill_Amount,
+        ba.Balance,
+        p.Plan_ID
+      FROM 
+        customer c
+      JOIN 
+        bank_account ba ON c.Customer_ID = ba.Customer_ID
+      JOIN 
+        plan p ON c.Plan_ID = p.Plan_ID
+      WHERE 
+        c.Customer_ID = $1
+      `,
+      [customer_id]
+    );
+
+    if (customerResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).send("Customer not found");
+    }
+
+    const { bill_amount: Bill_Amount, balance: Balance, plan_id: Plan_ID } = customerResult.rows[0];
+
+    if (make_payment_amount > Balance) {
+      await client.query("ROLLBACK");
+      return res.status(400).send("Insufficient funds in bank account.");
+    }
+
+    const newBillAmount = Bill_Amount - make_payment_amount;
+    const newBillingStatus = newBillAmount <= 0 ? "Paid" : "Unpaid";
+
+    await client.query(
+      `
+      UPDATE customer 
+      SET Bill_Amount = $1, Billing_Status = $2
+      WHERE Customer_ID = $3
+      `,
+      [Math.max(newBillAmount, 0), newBillingStatus, customer_id]
+    );
+
+    const newBalance = Balance - make_payment_amount;
+    await client.query(
+      `
+      UPDATE bank_account 
+      SET Balance = $1
+      WHERE Customer_ID = $2
+      `,
+      [newBalance, customer_id]
+    );
+
+    await client.query(
+      `
+      INSERT INTO payment (
+        Amount,
+        Payment_Date,
+        Payment_Type,
+        Card_Type,
+        Card_Number,
+        Company_Balance,
+        Customer_ID,
+        Plan_ID
+      )
+      VALUES ($1, DEFAULT, $2, $3, $4, $5, $6, $7)
+      `,
+      [make_payment_amount, payment_type, make_payment_card_type, make_payment_card_number, newBalance, customer_id, Plan_ID]
+    );
+
+    await client.query("COMMIT");
+    const endTime = Date.now()
+    logTransaction("Customer Payment", endTime - startTime, customer_id)
+    res.status(200).send("Payment successfully processed.");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Error processing payment:", err.message);
+    res.sendStatus(500);
+  } finally {
+    client.release();
+  }
+});
+
 
 
 app.put("/update_customer/:customer_id", async (req, res) => {

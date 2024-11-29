@@ -60,7 +60,7 @@ CREATE TABLE "payment" (
     Payment_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Payment_Type CHAR(10) NOT NULL CHECK (Payment_Type IN ('Automatic', 'Manual')),
     Card_Type CHAR(10) NOT NULL CHECK (Card_Type IN ('Credit', 'Debit')),
-    Card_Number CHAR(16) NOT NULL,
+    Card_Number CHAR(20) NOT NULL,
     Company_Balance DOUBLE PRECISION NOT NULL,
     Customer_ID INT NOT NULL,
     Plan_ID INT NOT NULL,

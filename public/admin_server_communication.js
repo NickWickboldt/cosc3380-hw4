@@ -160,6 +160,10 @@ const updateTables = () => {
   fetchTransaction()
   fetchCustomerStanding();
   fetchMonthlyRevenue();
+
+  setInterval(() => {
+    updateTables()
+  }, 5000);
 };
 
 window.onload = () => {

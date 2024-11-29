@@ -145,6 +145,55 @@
             <div id="delete_statusMessage" style="display: none"></div>
           </form>
         </div>
+        <div class="check-status">
+          <form action="/billing_status" method="get" id="billing-status-form">
+            <h2>Check Billing Status</h2>
+            <label for="billing_status_customer_id">Customer ID:</label><br />
+            <input 
+              type="text"
+              id="billing_status_customer_id"
+              name="billing_status_customer_id"
+              required/>
+            <br /><br />
+            <input type="submit" class="btn" value="Check Status" />
+            <div id="billing_status_statusMessage" style="display: none"></div>
+          </form>
+        </div>
+        <div class="make-payment">
+          <p class="payment-message">To make a payment, first, check your billing status.</p>
+          <form action="/make_payment" method="put" id="make-payment-form" style="display:none">
+            <h2>Make a Payment</h2>
+            <label for="make_payment_customer_id">Customer ID:</label><br />
+            <input 
+              type="text"
+              id="make_payment_customer_id"
+              name="make_payment_customer_id"
+              required/>
+            <br /><br />
+            <label for="make_payment_amount">Amount:</label><br />
+            <input 
+              type="text"
+              id="make_payment_amount"
+              name="make_payment_amount"
+              required/>
+            <br /><br />
+            <label for="make_payment_card_type">Card Type</label><br />
+            <select name="make_payment_card_type" id="make_payment_card_type" >
+              <option value="Credit">Credit</option>
+              <option value="Debit">Debit</option>
+            </select>
+            <br /><br />
+            <label for="make_payment_card_number">Card Number:</label><br />
+            <input 
+              type="text"
+              id="make_payment_card_number"
+              name="make_payment_card_number"
+              required/>
+            <br /><br />
+            <input type="submit" class="btn" value="Submit Payment" />
+            <div id="make_payment_statusMessage" style="display: none"></div>
+          </form>
+        </div>
     </div>
   </body>
 </html>

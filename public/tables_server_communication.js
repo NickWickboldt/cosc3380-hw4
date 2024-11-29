@@ -124,6 +124,10 @@ const updateTables = () => {
   fetchPhonePlans();
   fetchCallRecord();
   fetchPayment();
+
+  setInterval(() => {
+    updateTables()
+  }, 5000);
 }
 
 window.onload = () => {

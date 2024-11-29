@@ -27,7 +27,7 @@
   row-gap: 2vmin;
 }
 
-.create-customer, .update-customer, .delete-customer, .minutes-cost-customer, .check-standing-customer, .monthly-revenue{
+.create-customer, .update-customer, .delete-customer, .check-status, .make-payment, .minutes-cost-customer, .check-standing-customer, .monthly-revenue{
   border: solid black 1px;
   min-width: 10vmin;
   display: flex;
@@ -42,11 +42,11 @@
   max-height: 60vmin;
 }
 
-#create-customer-form > h2, #update-customer-form > h2, #delete-customer-form > h2, #minutes-cost-customer-form > h2, #check-standing-customer-form > h2{
+#create-customer-form > h2, #update-customer-form > h2, #delete-customer-form > h2, #billing-status-form > h2, #make-payment-form > h2, #minutes-cost-customer-form > h2, #check-standing-customer-form > h2{
   margin-bottom: 1vmin;
 }
 
-#statusMessage, #update_statusMessage, #delete_statusMessage, #minutes_cost_statusMessage{
+#statusMessage, #update_statusMessage, #delete_statusMessage, #minutes_cost_statusMessage, #billing_status_statusMessage, #make_payment_statusMessage{
   margin-top:1vmin;
   background-color: rgba(0, 255, 0, 0.3);
   font-weight: bold;
@@ -77,7 +77,7 @@
   border-radius: 1vmin;
 }
 
-#plan_id, #update_plan_id{
+#plan_id, #update_plan_id, #make_payment_card_type{
   width: 100%;
 }
 
