@@ -70,10 +70,8 @@ CREATE TABLE "payment" (
 
 CREATE TABLE "transaction" (
     Transaction_ID SERIAL PRIMARY KEY, 
-    Transaction_Type CHAR(15) NOT NULL CHECK (Transaction_Type IN ('Payment', 'Call', 'Data Usage', 'Plan Change')), -- Type of transaction
+    Transaction_Type CHAR(30) NOT NULL , 
     Transaction_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-    Transaction_Duration BIGINT NOT NULL, -- Duration of the transaction in milliseconds
+    Transaction_Duration BIGINT NOT NULL, 
     Customer_ID INT NOT NULL, 
-    Related_Entity_ID INT, 
-    FOREIGN KEY (Customer_ID) REFERENCES "customer" (Customer_ID)
 );

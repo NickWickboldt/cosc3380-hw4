@@ -4,6 +4,7 @@ const { Pool } = require("pg");
 const path = require("path");
 const cors = require("cors");
 const { faker } = require("@faker-js/faker");
+const { start } = require("repl");
 
 const app = express();
 app.use(bodyParser.json());
@@ -156,12 +157,10 @@ app.put("/create_tables", async (req, res) => {
 
         CREATE TABLE "transaction" (
           Transaction_ID SERIAL PRIMARY KEY, 
-          Transaction_Type CHAR(15) NOT NULL CHECK (Transaction_Type IN ('Payment', 'Call', 'Data Usage', 'Plan Change')), -- Type of transaction
+          Transaction_Type CHAR(15) NOT NULL,
           Transaction_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
           Transaction_Duration BIGINT NOT NULL,
-          Customer_ID INT NOT NULL, 
-          Related_Entity_ID INT, 
-          FOREIGN KEY (Customer_ID) REFERENCES "customer" (Customer_ID)
+          Customer_ID INT NOT NULL
         );
       `);
 
@@ -401,6 +400,16 @@ app.get("/payment", async (req, res) => {
   }
 });
 
+app.get("/transaction", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM transaction");
+    res.json(result.rows); 
+  } catch (err) {
+    console.error(err.message);
+    res.sendStatus(500); 
+  }
+}); 
+
 app.get("/minutes_cost/:minutes_cost_customer_id", async (req, res) => {
   const { minutes_cost_customer_id } = req.params;
 
@@ -517,8 +526,9 @@ app.put("/update_customer/:customer_id", async (req, res) => {
   const client = await pool.connect();
 
   try {
-    // Begin transaction
+    
     await client.query("BEGIN");
+    const startTime = Date.now()
 
     // Step 1: Check if the customer exists
     const customerResult = await client.query(
@@ -557,6 +567,8 @@ app.put("/update_customer/:customer_id", async (req, res) => {
 
     // Commit transaction
     await client.query("COMMIT");
+    const endTime = Date.now()
+    logTransaction("Update Customer", endTime - startTime, customer_id)
     res.sendStatus(200);
     console.log("Successfully updated customer and related entries.");
   } catch (err) {
@@ -574,6 +586,7 @@ app.delete("/delete_customer/:customer_id", async (req, res) => {
   const client = await pool.connect();
 
   try {
+    const startTime = Date.now()
     await client.query("BEGIN");
 
     // Check if the customer exists
@@ -607,11 +620,10 @@ app.delete("/delete_customer/:customer_id", async (req, res) => {
       [customer_id]
     );
 
-    // The associated bank account will be deleted automatically due to ON DELETE CASCADE
-    // in the "bank_account" table
-
     await client.query("COMMIT");
-    res.sendStatus(200); // Successfully deleted
+    const endTime = Date.now()
+    res.sendStatus(200); 
+    logTransaction("Delete Customer", endTime - startTime, customer_id)
     console.log(`Successfully deleted customer with ID ${customer_id} and all associated records.`);
   } catch (err) {
     await client.query("ROLLBACK");
@@ -628,6 +640,7 @@ app.delete("/delete_all_customers", async (req, res) => {
 
   try {
     await client.query("BEGIN");
+    const startTime = Date.now()
 
     await client.query(
       `DELETE FROM call_record
@@ -644,6 +657,8 @@ app.delete("/delete_all_customers", async (req, res) => {
     );
 
     await client.query("COMMIT");
+    const endTime = Date.now()
+    logTransaction("Delete All", endTime - startTime, -1)
     res.sendStatus(200);
     console.log("Successfully deleted all customers and associated records.");
   } catch (err) {
@@ -678,6 +693,7 @@ app.post("/submit_customer", async (req, res) => {
 
   try {
     await client.query("BEGIN");
+    const startTime = Date.now()
 
     // Insert the customer into the `customer` table
     const customerResult = await client.query(
@@ -697,6 +713,8 @@ app.post("/submit_customer", async (req, res) => {
     );
 
     await client.query("COMMIT");
+    const endTime = Date.now()
+    logTransaction("Create Customer", endTime - startTime, customerId)
     res.sendStatus(201); 
   } catch (err) {
     await client.query("ROLLBACK");
@@ -707,5 +725,25 @@ app.post("/submit_customer", async (req, res) => {
   }
 });
 
+async function logTransaction(transactionType, transactionDuration, customerId){
+  const client = await pool.connect()
 
+  try {
+    const query = `
+      INSERT INTO "transaction" (Transaction_Type, Transaction_Date, Transaction_Duration, Customer_ID)
+      VALUES ($1, DEFAULT, $2, $3)
+      RETURNING Transaction_ID
+    `;
+
+    const values = [transactionType, transactionDuration, customerId];
+
+    const result = await client.query(query, values); 
+
+    return result.rows[0].transaction_id; 
+  } catch (err) {
+    throw err; 
+  } finally {
+    client.release(); 
+  }
+}
 app.listen(3000, () => console.log("Server is running on port 3000"));

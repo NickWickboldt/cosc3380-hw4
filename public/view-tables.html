@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phone Company Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./tables_server_communication.js" defer></script>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <h1 class="mainpage-header">Phone Company Dashbaord</h1>
+        <div class="nav-links">
+          <a href="./index.html" class="nav-link">Customer Interface</a>
+          <a href="./admin-interface.html" class="nav-link">Admin Interface</a>
+          <a href="#" class="nav-link active-link">View Tables</a>
+        </div>
+      </div>
+    </nav>
+    <div class="main-container">
+      <div class="customer-list">
+        <h2>Customer List</h2>
+        <table id="customersTable" style="border: solid black 1px">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Email</th>
+              <th>Phone Number</th>
+              <th>Created At</th>
+              <th>Is Busy?</th>
+              <th>Plan ID</th>
+              <th>Bill Amount</th>
+              <th>Billing Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JavaScript will populate this -->
+          </tbody>
+        </table>
+      </div>
+      <div class="bank-list">
+        <h2>Bank Table List</h2>
+        <table id="bankTable" style="border: solid black 1px">
+          <thead>
+            <tr>
+              <th>Account Number</th>
+              <th>Balance</th>
+              <th>Bank Name</th>
+              <th>Bank Log</th>
+              <th>Customer ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JavaScript will populate this -->
+          </tbody>
+        </table>
+      </div>
+      <div class="phone-plan-list">
+        <h2>Phone Plan Table List</h2>
+        <table id="phonePlanTable" style="border: solid black 1px">
+          <thead>
+            <tr>
+              <th>Plan ID</th>
+              <th>Plan Name</th>
+              <th>Data Type</th>
+              <th>Call Minutes</th>
+              <th>Data Limit</th>
+              <th>Data Overage Cost</th>
+              <th>Plant Cost</th>
+              <th>Cost Frequency</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JavaScript will populate this -->
+          </tbody>
+        </table>
+      </div>
+      <div class="call-record-list">
+        <h2>Call Record Table List</h2>
+        <table id="callRecordsTable" style="border: solid black 1px">
+          <thead>
+            <tr>
+              <th>Phone Number</th>
+              <th>Call Start</th>
+              <th>Call End</th>
+              <th>Duration</th>
+              <th>Data Usage</th>
+              <th>Cost</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JavaScript will populate this -->
+          </tbody>
+        </table>
+      </div>
+      <div class="payment-list">
+        <h2>Payment Table List</h2>
+        <table id="paymentTable" style="border: solid black 1px">
+          <thead>
+            <tr>
+              <th>Payment ID</th>
+              <th>Amount</th>
+              <th>Payment Date</th>
+              <th>Payment Type</th>
+              <th>Card Type</th>
+              <th>Card Number</th>
+              <th>Company Balance</th>
+              <th>Customer ID</th>
+              <th>Plan ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JavaScript will populate this -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

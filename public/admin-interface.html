@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phone Company Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./admin_server_communication.js" defer></script>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <h1 class="mainpage-header">Phone Company Dashbaord</h1>
+        <div class="nav-links">
+          <a href="./index.html" class="nav-link">Customer Interface</a>
+          <a href="#" class="nav-link active-link">Admin Interface</a>
+          <a href="./view-tables.html" class="nav-link">View Tables</a>
+        </div>
+      </div>
+    </nav>
+    <div class="main-container">
+      <div class="customer-operations-container">
+        <div class="minutes-cost-customer">
+          <form
+            action="/minutes_cost_customer"
+            method="get"
+            id="minutes-cost-customer-form"
+          >
+            <h2>Customer Minutes|Cost</h2>
+            <label for="minutes_cost_customer_id">Customer ID:</label><br />
+            <input
+              type="text"
+              id="minutes_cost_customer_id"
+              name="minutes_cost_customer_id"
+              required
+            /><br /><br />
+
+            <input type="submit" class="btn" value="Check" />
+            <table
+              id="minutesCostTable"
+              style="border: solid black 1px; display: none"
+            ></table>
+            <div id="minutes_cost_statusMessage" style="display: none"></div>
+          </form>
+        </div>
+        <div class="check-standing-customer">
+          <h2>Customer Standing</h2>
+          <table id="standingsTable" style="border: solid black 1px">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Standing</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- JavaScript will populate this -->
+            </tbody>
+          </table>
+        </div>
+        <div class="monthly-revenue">
+          <h2>Monthly Revenue</h2>
+          <div
+            id="monthlyRevenueContainer"
+            style="border: solid black 1px"
+          ></div>
+        </div>
+      </div>
+      <button class="delete-all-customers btn">Delete All Customers</button>
+      <div class="customer-list">
+        <table id="transactionTable" style="border: solid black 1px">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Transaction Type</th>
+              <th>Transaction Date</th>
+              <th>Transaction Duration</th>
+              <th>Customer ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JavaScript will populate this -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>
