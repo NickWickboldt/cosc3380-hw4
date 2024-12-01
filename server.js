@@ -4,8 +4,6 @@ const { Pool } = require("pg");
 const path = require("path");
 const cors = require("cors");
 const { faker } = require("@faker-js/faker");
-const { start } = require("repl");
-const { log } = require("console");
 
 const app = express();
 app.use(bodyParser.json());
@@ -123,7 +121,7 @@ app.put("/create_tables", async (req, res) => {
 
         CREATE TABLE "bank_account" (
           Account_number INT PRIMARY KEY, 
-          Balance INT NOT NULL,
+          Balance DOUBLE PRECISION DEFAULT 0.0 NOT NULL,
           Bank_name CHAR(50) NOT NULL,
           Bank_log CHAR(50) NOT NULL,
           Customer_ID INT NOT NULL,
@@ -1191,6 +1189,7 @@ async function createRandomCustomer(planIds) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    const startTime = Date.now()
 
     const firstName = faker.person.firstName();
     const lastName = faker.person.lastName();
@@ -1245,6 +1244,8 @@ async function createRandomCustomer(planIds) {
     );
 
     await client.query("COMMIT");
+    const endTime = Date.now()
+    logTransaction("SIM: Create Customer", endTime - startTime, customerId)
     console.log(`Customer created successfully: ${firstName} ${lastName}`);
   } catch (err) {
     await client.query("ROLLBACK");
@@ -1257,9 +1258,9 @@ async function createRandomCustomer(planIds) {
 async function updateRandomCustomer() {
   const client = await pool.connect();
   try {
-    await client.query("BEGIN"); // Start transaction
+    await client.query("BEGIN");
+    const startTime = Date.now()
 
-    // Select a random customer
     const customerResult = await client.query(`
       SELECT * FROM customer ORDER BY RANDOM() LIMIT 1;
     `);
@@ -1276,7 +1277,6 @@ async function updateRandomCustomer() {
     let updateValues = [];
     let cascadeUpdates = [];
 
-    // Handle phone number update
     if (Math.random() < 0.5) {
       const newPhoneNumber = faker.number
         .int({ min: 1111111111, max: 9999999999 })
@@ -1294,7 +1294,6 @@ async function updateRandomCustomer() {
         [customer.phone_number]
       );
 
-      // Delete old call records for the current phone number
       await client.query(
         `
         DELETE FROM call_record 
@@ -1306,7 +1305,6 @@ async function updateRandomCustomer() {
         `Deleted all call records for old phone number: ${customer.phone_number}`
       );
 
-      // Update the customer's phone number
       const setClauses = updateFields
         .map((field, index) => `${field} = $${index + 1}`)
         .join(", ");
@@ -1322,7 +1320,6 @@ async function updateRandomCustomer() {
       );
       console.log(`Updated customer phone number to: ${newPhoneNumber}`);
 
-      // Recreate call records for the new phone number
       for (const record of oldCallRecords.rows) {
         await client.query(
           `
@@ -1369,7 +1366,6 @@ async function updateRandomCustomer() {
       console.log(`New bank account created for customer ID: ${customer.customer_id}`);
     }
 
-    // Handle other customer updates (e.g., email, name)
     if (Math.random() < 0.5) {
       const newEmail = faker.internet.email();
       updateFields.push("Email");
@@ -1405,6 +1401,8 @@ async function updateRandomCustomer() {
     }
 
     await client.query("COMMIT");
+    const endTime = Date.now()
+    logTransaction("SIM: Update Customer", endTime - startTime, customer.customer_id)
     console.log(`Customer (ID: ${customer.customer_id}) updated successfully.`);
   } catch (err) {
     await client.query("ROLLBACK");
@@ -1414,6 +1412,120 @@ async function updateRandomCustomer() {
   }
 }
 
+async function randomCustomerPayment() {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN"); 
+    const startTime = Date.now()
+
+    const customerResult = await client.query(`
+      SELECT 
+        c.Customer_ID, 
+        c.Bill_Amount, 
+        c.Billing_Status, 
+        ba.Balance, 
+        p.Plan_ID 
+      FROM customer c
+      JOIN bank_account ba ON c.Customer_ID = ba.Customer_ID
+      JOIN plan p ON c.Plan_ID = p.Plan_ID
+      WHERE c.Billing_Status = 'Unpaid'
+      ORDER BY RANDOM() LIMIT 1;
+    `);
+
+    if (customerResult.rows.length === 0) {
+      console.log("No customers with unpaid bills found.");
+      await client.query("ROLLBACK");
+      return;
+    }
+
+    const {
+      customer_id: Customer_ID,
+      bill_amount: Bill_Amount,
+      balance: Balance,
+      plan_id: Plan_ID,
+    } = customerResult.rows[0];
+
+    const maxPaymentAmount = Math.min(Bill_Amount, Balance); // Maximum the customer can pay
+    if (maxPaymentAmount <= 0) {
+      console.log(
+        `Customer ID ${Customer_ID} has insufficient balance or no outstanding bill.`
+      );
+      await client.query("ROLLBACK");
+      return;
+    }
+
+    const make_payment_amount = Number(
+      faker.number.float({ min: 1, max: maxPaymentAmount }).toFixed(2)
+    );
+    const make_payment_card_type = faker.helpers.arrayElement([
+      "Credit",
+      "Debit",
+    ]);
+    const make_payment_card_number = faker.number
+      .int({ min: 1000000000000000, max: 9999999999999999 })
+      .toString();
+    const payment_type = "Manual";
+
+    const newBillAmount = Bill_Amount - make_payment_amount;
+    const newBillingStatus = newBillAmount <= 0 ? "Paid" : "Unpaid";
+
+    await client.query(
+      `
+      UPDATE customer 
+      SET Bill_Amount = $1, Billing_Status = $2
+      WHERE Customer_ID = $3
+      `,
+      [Math.max(newBillAmount, 0), newBillingStatus, Customer_ID]
+    );
+
+    const newBalance = Balance - make_payment_amount;
+    await client.query(
+      `
+      UPDATE bank_account 
+      SET Balance = $1
+      WHERE Customer_ID = $2
+      `,
+      [newBalance, Customer_ID]
+    );
+
+    await client.query(
+      `
+      INSERT INTO payment (
+        Amount,
+        Payment_Date,
+        Payment_Type,
+        Card_Type,
+        Card_Number,
+        Company_Balance,
+        Customer_ID,
+        Plan_ID
+      )
+      VALUES ($1, DEFAULT, $2, $3, $4, $5, $6, $7)
+      `,
+      [
+        make_payment_amount,
+        payment_type,
+        make_payment_card_type,
+        make_payment_card_number,
+        newBalance,
+        Customer_ID,
+        Plan_ID,
+      ]
+    );
+
+    await client.query("COMMIT");
+    const endTime = Date.now()
+    logTransaction("SIM: Make Payment", endTime - startTime, Customer_ID)
+    console.log(
+      `Customer ID ${Customer_ID} made a payment of $${make_payment_amount}.`
+    );
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Error processing random payment:", err.message);
+  } finally {
+    client.release();
+  }
+}
 
 
 let simulationInterval = null;
@@ -1427,15 +1539,19 @@ app.get("/simulation", async (req, res) => {
 
   simulationInterval = setInterval(async () => {
     try {
-      const operation = Math.random() < 0.5 ? "create" : "update";
+      const operations = ["create", "update", "payment"];
+      const selectedOperation = operations[Math.floor(Math.random() * operations.length)];
 
-      if (operation === "create") {
+      if (selectedOperation === "create") {
         const planIds = [1, 2, 3];
         console.log("Executing createRandomCustomer operation...");
         await createRandomCustomer(planIds);
-      } else {
+      } else if (selectedOperation === "update") {
         console.log("Executing updateRandomCustomer operation...");
         await updateRandomCustomer();
+      } else if (selectedOperation === "payment") {
+        console.log("Executing randomCustomerPayment operation...");
+        await randomCustomerPayment();
       }
     } catch (err) {
       console.error("Error during simulation operation:", err.message);
@@ -1444,6 +1560,7 @@ app.get("/simulation", async (req, res) => {
 
   res.status(200).send("Simulation started. Check the console for progress.");
 });
+
 
 /*Transaction Logging*/
 

@@ -85,7 +85,7 @@ const fetchCallRecord = async () => {
       <td>${record.call_start.substring(record.call_start.indexOf('T'), record.call_start.length)}</td>
       <td>${record.call_end.substring(record.call_end.indexOf('T'), record.call_end.length)}</td>
       <td>${record.duration}</td>
-      <td>${record.data_usage}</td>
+      <td>${record.data_usage.toFixed(2)}</td>
       <td>${record.cost.toFixed(2)}</td>
       <td>${record.date.substring(0, record.date.indexOf('T'))}</td>
     `;

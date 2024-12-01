@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS "transaction";
 
 CREATE TABLE "bank_account" (
     Account_number INT PRIMARY KEY, 
-    Balance INT NOT NULL,
+    Balance DOUBLE PRECISION DEFAULT 0.0 NOT NULL,
     Bank_name CHAR(50) NOT NULL,
     Bank_log CHAR(50) NOT NULL,
     Customer_ID INT NOT NULL, 
