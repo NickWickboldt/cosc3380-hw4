@@ -58,8 +58,10 @@ async function createDatabase() {
 
   try {
     const client = await defaultPool.connect();
-
+    const startTime = Date.now()
     await client.query(`CREATE DATABASE phone_company`);
+    const endTime = Date.now()
+    logTransaction("DB Created", endTime - startTime, -1)
     console.log("Database 'phone_company' created successfully.");
   } catch (error) {
     console.error("Error creating database:", error);
@@ -80,6 +82,7 @@ app.put("/create_tables", async (req, res) => {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
+      const startTime = Date.now()
 
       // Drop tables if they exist
       await client.query(`
@@ -164,6 +167,8 @@ app.put("/create_tables", async (req, res) => {
       `);
 
       await client.query("COMMIT");
+      const endTime = Date.now()
+      logTransaction("Created Tables", endTime - startTime, -1)
       console.log("Tables created successfully!");
       res.sendStatus(200);
     } catch (err) {
@@ -184,6 +189,7 @@ app.put("/initialize_tables", async (req, res) => {
 
   try {
     await client.query("BEGIN");
+    const startTime = Date.now()
 
     // Truncate all tables to clear data
     await client.query(`
@@ -343,6 +349,8 @@ app.put("/initialize_tables", async (req, res) => {
     }
 
     await client.query("COMMIT");
+    const endTime = Date.now()
+    logTransaction("Tables Initialized", endTime - startTime, -1)
     console.log("Initial data inserted successfully!");
     res.sendStatus(200);
   } catch (err) {
@@ -1137,54 +1145,6 @@ app.put("/end_call", async (req, res) => {
 
 /*Simulation Code*/
 
-app.get("/random_customer", async (req, res) => {
-  const client = await pool.connect();
-
-  try {
-    const result = await client.query(`
-      SELECT * 
-      FROM customer 
-      ORDER BY RANDOM() 
-      LIMIT 1;
-    `);
-
-    if (result.rows.length === 0) {
-      return res.status(404).send("No customers found.");
-    }
-
-    res.status(200).json(result.rows[0]);
-  } catch (err) {
-    console.error("Error fetching random customer:", err.message);
-    res.status(500).send("Internal server error.");
-  } finally {
-    client.release();
-  }
-});
-
-app.get("/random_customer_phone_number", async (req, res) => {
-  const client = await pool.connect();
-
-  try {
-    const result = await client.query(`
-      SELECT phone_number 
-      FROM customer 
-      ORDER BY RANDOM() 
-      LIMIT 1;
-    `);
-
-    if (result.rows.length === 0) {
-      return res.status(404).send("No phone numbers found.");
-    }
-
-    res.status(200).json({ phone_number: result.rows[0].phone_number });
-  } catch (err) {
-    console.error("Error fetching random phone number:", err.message);
-    res.status(500).send("Internal server error.");
-  } finally {
-    client.release();
-  }
-});
-
 async function createRandomCustomer(planIds) {
   const client = await pool.connect();
   try {
@@ -1527,6 +1487,250 @@ async function randomCustomerPayment() {
   }
 }
 
+async function simulateCall() {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+    const startTimeCreate = Date.now()
+
+    const phoneNumbersResult = await client.query(`
+      SELECT Phone_number 
+      FROM customer 
+      WHERE Is_Busy = FALSE 
+      ORDER BY RANDOM() 
+      LIMIT 2;
+    `);
+
+    if (phoneNumbersResult.rows.length < 2) {
+      console.log("Not enough available customers to simulate a call.");
+      await client.query("ROLLBACK");
+      return;
+    }
+
+    const [sourceNumber, destinationNumber] = phoneNumbersResult.rows.map(
+      (row) => row.phone_number.trim()
+    );
+
+    const busyCheckResult = await client.query(
+      `
+      SELECT Phone_number, Is_Busy 
+      FROM customer 
+      WHERE Phone_number IN ($1, $2) 
+      FOR UPDATE;
+      `,
+      [sourceNumber, destinationNumber]
+    );
+
+    const busyNumbers = busyCheckResult.rows.filter((row) => row.is_busy);
+    if (busyNumbers.length > 0) {
+      console.log(
+        `Cannot initiate call. These numbers are busy: ${busyNumbers
+          .map((row) => row.phone_number)
+          .join(", ")}`
+      );
+      await client.query("ROLLBACK");
+      return;
+    }
+
+    const sourceResult = await client.query(
+      `
+      UPDATE customer 
+      SET Is_Busy = TRUE 
+      WHERE Phone_number = $1
+      RETURNING Customer_ID
+      `,
+      [sourceNumber]
+    );
+
+    const sourceCustomerId = sourceResult.rows[0].customer_id;
+
+    const destinationResult = await client.query(
+      `
+      UPDATE customer 
+      SET Is_Busy = TRUE 
+      WHERE Phone_number = $1
+      RETURNING Customer_ID
+      `,
+      [destinationNumber]
+    );
+
+    const desinationResultId = destinationResult.rows[0].customer_id
+
+    await client.query("COMMIT");
+    const endTimeCreate = Date.now()
+    logTransaction("SIM: Create Call", endTimeCreate - startTimeCreate, sourceCustomerId)
+    logTransaction("SIM: Create Call", endTimeCreate - startTimeCreate, desinationResultId)
+
+    console.log(
+      `Call initiated between ${sourceNumber} and ${destinationNumber}.`
+    );
+
+    // Simulate call duration (10 to 60 seconds)
+    const duration = faker.number.int({ min: 10, max: 60 });
+    console.log(`Simulated call duration: ${duration} seconds.`);
+
+    // Wait for the duration of the call
+    setTimeout(async () => {
+      try {
+        await client.query("BEGIN");
+        const startTime = Date.now()
+
+        // Fetch customer and plan details
+        const customerResult = await client.query(
+          `
+          SELECT 
+            c.Customer_ID, 
+            c.Phone_number, 
+            c.Bill_Amount, 
+            c.Plan_ID, 
+            p.Call_Minutes, 
+            p.Plan_Cost, 
+            p.Data_Overage_Cost, 
+            p.Data_type
+          FROM 
+            customer c
+          JOIN 
+            plan p ON c.Plan_ID = p.Plan_ID
+          WHERE 
+            c.Phone_number IN ($1, $2);
+          `,
+          [sourceNumber, destinationNumber]
+        );
+
+        const customers = customerResult.rows;
+        const sourceCustomer = customers.find(
+          (c) => c.phone_number.trim() === sourceNumber
+        );
+        const destinationCustomer = customers.find(
+          (c) => c.phone_number.trim() === destinationNumber
+        );
+
+        const calculateCallCostAndDataUsage = (customer) => {
+          const {
+            bill_amount,
+            call_minutes,
+            plan_cost,
+            data_overage_cost,
+            data_type,
+          } = customer;
+
+          const costPerMinute = plan_cost / call_minutes;
+
+          const usedMinutes = bill_amount / costPerMinute;
+
+          const remainingMinutes = Math.max(call_minutes - usedMinutes, 0);
+
+          const inPlanMinutes = Math.min(duration, remainingMinutes);
+
+          const overageMinutes = Math.max(duration - remainingMinutes, 0);
+
+          const inPlanCost = inPlanMinutes * costPerMinute;
+          const overageCost = overageMinutes * data_overage_cost;
+          const totalCost = inPlanCost + overageCost;
+
+          const dataRatePerMinute = data_type.trim() === "4G" ? 0.5 : 1.0;
+          const dataUsage = duration * dataRatePerMinute;
+
+          return { totalCost, dataUsage };
+        };
+
+        const { totalCost: sourceCallCost, dataUsage: sourceDataUsage } =
+          calculateCallCostAndDataUsage(sourceCustomer);
+        const {
+          totalCost: destinationCallCost,
+          dataUsage: destinationDataUsage,
+        } = calculateCallCostAndDataUsage(destinationCustomer);
+
+        // Update Bill_Amount for both customers
+        await client.query(
+          `
+          UPDATE customer 
+          SET Bill_Amount = Bill_Amount + $1 
+          WHERE Customer_ID = $2;
+          `,
+          [sourceCallCost, sourceCustomer.customer_id]
+        );
+
+        await client.query(
+          `
+          UPDATE customer 
+          SET Bill_Amount = Bill_Amount + $1 
+          WHERE Customer_ID = $2;
+          `,
+          [destinationCallCost, destinationCustomer.customer_id]
+        );
+
+        // Insert call records
+        const callStartTime = new Date(Date.now() - duration * 1000); // Calculate call start time
+        const callEndTime = new Date();
+
+        await client.query(
+          `
+          INSERT INTO call_record (
+            Phone_number, Call_start, Call_end, Duration, Data_Usage, Cost
+          )
+          VALUES ($1, $2, $3, $4, $5, $6);
+          `,
+          [
+            sourceNumber,
+            callStartTime,
+            callEndTime,
+            duration,
+            sourceDataUsage,
+            sourceCallCost,
+          ]
+        );
+
+        await client.query(
+          `
+          INSERT INTO call_record (
+            Phone_number, Call_start, Call_end, Duration, Data_Usage, Cost
+          )
+          VALUES ($1, $2, $3, $4, $5, $6);
+          `,
+          [
+            destinationNumber,
+            callStartTime,
+            callEndTime,
+            duration,
+            destinationDataUsage,
+            destinationCallCost,
+          ]
+        );
+
+        // Set customers to not busy
+        await client.query(
+          `
+          UPDATE customer 
+          SET Is_Busy = FALSE 
+          WHERE Phone_number IN ($1, $2);
+          `,
+          [sourceNumber, destinationNumber]
+        );
+
+        console.log(
+          `Call ended between ${sourceNumber} and ${destinationNumber}. Records updated.`
+        );
+
+        await client.query("COMMIT");
+        const endTime = Date.now()
+        logTransaction("SIM: End Call", endTime - startTime, sourceCustomer.customer_id)
+        logTransaction("SIM: End Call", endTime - startTime, destinationCustomer.customer_id)
+      } catch (err) {
+        await client.query("ROLLBACK");
+        console.error("Error ending call:", err.message);
+      } finally {
+        client.release();
+      }
+    }, duration * 1000);
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Error simulating call:", err.message);
+    client.release()
+  } 
+}
+
 
 let simulationInterval = null;
 
@@ -1539,7 +1743,7 @@ app.get("/simulation", async (req, res) => {
 
   simulationInterval = setInterval(async () => {
     try {
-      const operations = ["create", "update", "payment"];
+      const operations = ["create", "update", "payment", "call"];
       const selectedOperation = operations[Math.floor(Math.random() * operations.length)];
 
       if (selectedOperation === "create") {
@@ -1552,6 +1756,9 @@ app.get("/simulation", async (req, res) => {
       } else if (selectedOperation === "payment") {
         console.log("Executing randomCustomerPayment operation...");
         await randomCustomerPayment();
+      } else if (selectedOperation === "call") {
+        console.log("Executing simulateCall operation...");
+        await simulateCall()
       }
     } catch (err) {
       console.error("Error during simulation operation:", err.message);
@@ -1560,6 +1767,19 @@ app.get("/simulation", async (req, res) => {
 
   res.status(200).send("Simulation started. Check the console for progress.");
 });
+
+app.get("/stop_simulation", (req, res) => {
+  if (!simulationInterval) {
+    return res.status(400).send("No simulation is currently running.");
+  }
+
+  clearInterval(simulationInterval);
+  simulationInterval = null;
+
+  console.log("Simulation stopped.");
+  res.status(200).send("Simulation stopped successfully.");
+});
+
 
 
 /*Transaction Logging*/

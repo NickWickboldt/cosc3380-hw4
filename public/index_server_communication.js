@@ -53,6 +53,24 @@ const simulation = async () => {
   }
 };
 
+const stopSimulation = async () => {
+  try {
+    const response = await fetch("/stop_simulation", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.ok) {
+      console.log("Simulation started successfully!");
+    } else {
+      console.log("Simulation aborted.");
+    }
+  } catch (err) {
+    console.error(err.message);
+  }
+};
+
 document
   .getElementById("create-customer-form")
   .addEventListener("submit", async function (event) {
@@ -384,19 +402,35 @@ document
       await initializeTables();
       updateTables();
       document.querySelector(".initialize-data").style.display = "none";
-      document.querySelector(".begin-simulation").style.display = "block"; 
+      document.querySelector(".begin-simulation").style.display = "block";
     }
   });
-
+let simulationActive = false;
 document
   .querySelector(".begin-simulation")
   .addEventListener("click", async () => {
-    let confirmCreate = confirm(
-      "Starting a simulation cannot be undone. Proceed?"
-    );
-    if (confirmCreate) {
-      await simulation();
-      updateTables();
-      document.querySelector(".begin-simulation").style.display = "block";
+    if (simulationActive) {
+      let confirmStop = confirm(
+        "Stop the simulation? All active calls will be completed. Proceed?"
+      );
+      if(confirmStop){
+        await stopSimulation();
+        simulationActive = false;
+        document.querySelector(".begin-simulation").style.innerHTML =
+          "Simulation";
+        updateTables();
+      }
+    } else {
+      let confirmCreate = confirm(
+        "Starting a simulation will simulate customer creation, updating, payments, and calls. Proceed?"
+      );
+      if (confirmCreate) {
+        await simulation();
+        simulationActive = true;
+        document.querySelector(".begin-simulation").innerHTML =
+          "Stop Simulation";
+        updateTables();
+        document.querySelector(".begin-simulation").style.display = "block";
+      }
     }
   });
