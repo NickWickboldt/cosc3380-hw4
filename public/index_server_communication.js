@@ -35,6 +35,24 @@ const initializeTables = async () => {
   }
 };
 
+const simulation = async () => {
+  try {
+    const response = await fetch("/simulation", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.ok) {
+      console.log("Simulation started successfully!");
+    } else {
+      console.log("Simulation aborted.");
+    }
+  } catch (err) {
+    console.error(err.message);
+  }
+};
+
 document
   .getElementById("create-customer-form")
   .addEventListener("submit", async function (event) {
@@ -201,7 +219,7 @@ document
     event.preventDefault();
     const formData = new FormData(this);
     const formObject = Object.fromEntries(formData.entries());
-    console.log(formObject)
+    console.log(formObject);
     try {
       const response = await fetch(
         `/make_payment/${formObject.make_payment_customer_id}`,
@@ -219,29 +237,25 @@ document
           "Payment Successful";
         this.reset();
         setTimeout(() => {
-          document.getElementById(
-            "make_payment_statusMessage"
-          ).style.display = "none";
-          document.getElementById(
-            "make-payment-form"
-          ).style.display = "none"
-          document.querySelector(".payment-message").style.display = "block"; 
+          document.getElementById("make_payment_statusMessage").style.display =
+            "none";
+          document.getElementById("make-payment-form").style.display = "none";
+          document.querySelector(".payment-message").style.display = "block";
           document.querySelector(".payment-message").innerHTML =
             "To make a payment, first, check your billing status.";
         }, 2000);
       } else {
         document.getElementById("make_payment_statusMessage").style.display =
           "block";
-        if (response.status == 400){
+        if (response.status == 400) {
           document.getElementById("make_payment_statusMessage").innerText =
-          "Insufficient Funds";
-        }
-        else if (response.status == 404){
+            "Insufficient Funds";
+        } else if (response.status == 404) {
           document.getElementById("make_payment_statusMessage").innerText =
-          "Failed to find customer.";
-        }else{
+            "Failed to find customer.";
+        } else {
           document.getElementById("make_payment_statusMessage").innerText =
-          "Failed to process payment.";
+            "Failed to process payment.";
         }
       }
     } catch (error) {
@@ -251,6 +265,98 @@ document
     }
   });
 
+document
+  .getElementById("make-call-form")
+  .addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const formData = new FormData(this);
+    const formObject = Object.fromEntries(formData.entries());
+    console.log("Form Data:", formObject);
+
+    const statusMessage = document.getElementById("make_call_statusMessage");
+    const endCallButton = document.querySelector(".make_call_end_call");
+
+    try {
+      statusMessage.style.display = "block";
+      statusMessage.innerText = "Attempting to start the call...";
+
+      const response = await fetch(`/make_call`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formObject),
+      });
+
+      if (response.ok) {
+        updateTables();
+        statusMessage.innerText = "Call is in progress...";
+
+        endCallButton.style.display = "block";
+
+        // Start the call duration timer
+        const callStartTime = Date.now();
+        const timerInterval = setInterval(() => {
+          const elapsedTime = Math.floor((Date.now() - callStartTime) / 1000);
+          statusMessage.innerText = `Call Duration: ${elapsedTime} seconds`;
+        }, 1000);
+
+        endCallButton.onclick = async function () {
+          clearInterval(timerInterval);
+
+          try {
+            const callDuration = Math.floor(
+              (Date.now() - callStartTime) / 1000
+            );
+
+            const updatedFormObject = {
+              ...formObject,
+              duration: callDuration,
+            };
+            statusMessage.innerText = "Ending the call...";
+            const endResponse = await fetch(`/end_call`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(updatedFormObject),
+            });
+
+            if (endResponse.ok) {
+              statusMessage.innerText = "Call ended successfully.";
+              setTimeout(() => {
+                statusMessage.style.display = "none";
+              }, 2000);
+              document.getElementById("make-call-form").reset();
+            } else {
+              const errorMessage = await endResponse.text();
+              if (endResponse.status === 404) {
+                statusMessage.innerText = `Failed to end the call: One or both phone numbers not found. Please check the input.`;
+              } else if (endResponse.status === 400) {
+                statusMessage.innerText = `Failed to end the call: ${
+                  errorMessage || "Invalid request data."
+                }`;
+              } else {
+                statusMessage.innerText = `Failed to end the call: ${
+                  errorMessage || "Unexpected error occurred."
+                }`;
+              }
+            }
+          } catch (error) {
+            console.error("Error ending the call:", error);
+            statusMessage.innerText =
+              "An error occurred while trying to end the call. Please try again.";
+          } finally {
+            endCallButton.style.display = "none";
+          }
+        };
+      } else {
+        const errorMessage = await response.text();
+        statusMessage.innerText = `Failed to start the call: ${errorMessage}`;
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      statusMessage.innerText =
+        "An error occurred while trying to initiate the call. Please try again.";
+    }
+  });
 const updateTables = () => {};
 
 document
@@ -278,5 +384,19 @@ document
       await initializeTables();
       updateTables();
       document.querySelector(".initialize-data").style.display = "none";
+      document.querySelector(".begin-simulation").style.display = "block"; 
+    }
+  });
+
+document
+  .querySelector(".begin-simulation")
+  .addEventListener("click", async () => {
+    let confirmCreate = confirm(
+      "Starting a simulation cannot be undone. Proceed?"
+    );
+    if (confirmCreate) {
+      await simulation();
+      updateTables();
+      document.querySelector(".begin-simulation").style.display = "block";
     }
   });

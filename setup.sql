@@ -11,7 +11,7 @@ CREATE TABLE "bank_account" (
     Balance INT NOT NULL,
     Bank_name CHAR(50) NOT NULL,
     Bank_log CHAR(50) NOT NULL,
-    Customer_ID INT UNIQUE NOT NULL, 
+    Customer_ID INT NOT NULL, 
     FOREIGN KEY (Customer_ID) REFERENCES "customer" (Customer_ID) ON DELETE CASCADE
 );
 

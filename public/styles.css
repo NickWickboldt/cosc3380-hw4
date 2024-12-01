@@ -27,7 +27,7 @@
   row-gap: 2vmin;
 }
 
-.create-customer, .update-customer, .delete-customer, .check-status, .make-payment, .minutes-cost-customer, .check-standing-customer, .monthly-revenue{
+.create-customer, .update-customer, .delete-customer, .check-status, .make-payment, .make-call, .minutes-cost-customer, .check-standing-customer, .monthly-revenue{
   border: solid black 1px;
   min-width: 10vmin;
   display: flex;
@@ -42,7 +42,7 @@
   max-height: 60vmin;
 }
 
-#create-customer-form > h2, #update-customer-form > h2, #delete-customer-form > h2, #billing-status-form > h2, #make-payment-form > h2, #minutes-cost-customer-form > h2, #check-standing-customer-form > h2{
+#create-customer-form > h2, #update-customer-form > h2, #delete-customer-form > h2, #billing-status-form > h2, #make-payment-form > h2, #make-call-form > h2, #minutes-cost-customer-form > h2, #check-standing-customer-form > h2{
   margin-bottom: 1vmin;
 }
 

@@ -86,7 +86,7 @@ const fetchCallRecord = async () => {
       <td>${record.call_end.substring(record.call_end.indexOf('T'), record.call_end.length)}</td>
       <td>${record.duration}</td>
       <td>${record.data_usage}</td>
-      <td>${record.cost}</td>
+      <td>${record.cost.toFixed(2)}</td>
       <td>${record.date.substring(0, record.date.indexOf('T'))}</td>
     `;
     callRecordTableBody.appendChild(row);
@@ -124,11 +124,14 @@ const updateTables = () => {
   fetchPhonePlans();
   fetchCallRecord();
   fetchPayment();
+};
 
-  setInterval(() => {
-    updateTables()
-  }, 5000);
-}
+updateTables();
+
+setInterval(() => {
+  updateTables();
+}, 5000); 
+
 
 window.onload = () => {
   updateTables()

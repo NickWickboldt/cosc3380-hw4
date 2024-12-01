@@ -22,6 +22,7 @@
     <div class="init-button-container">
       <button class="create-tables-button btn">Create Tables</button>
       <button class="initialize-data btn">Initialize Tables</button>
+      <button style="display:none" class="begin-simulation btn">Simulation</button>
     </div>
     <div class="main-container">
       <div class="customer-operations-container">
@@ -193,6 +194,28 @@
             <input type="submit" class="btn" value="Submit Payment" />
             <div id="make_payment_statusMessage" style="display: none"></div>
           </form>
+        </div>
+        <div class="make-call">
+          <form action="/make_call" method="put" id="make-call-form">
+            <h2>Simulate Call</h2>
+            <label for="make_call_source_number">Source Phone Number:</label><br />
+            <input 
+              type="text"
+              id="make_call_source_number"
+              name="make_call_source_number"
+              required/>
+            <br /><br />
+            <label for="make_call_destination_number">Destination Phone Number:</label><br />
+            <input 
+              type="text"
+              id="make_call_destination_number"
+              name="make_call_destination_number"
+              required/>
+            <br /><br />
+            <input type="submit" class="btn" value="Make Call">
+            <div id="make_call_statusMessage" style="display:none"></div>
+          </form>
+          <button class="make_call_end_call" style="display:none" type="button">End Call</button>
         </div>
     </div>
   </body>
