@@ -2,19 +2,48 @@ const fetchCustomerStanding = async () => {
   const response = await fetch("/customer_standing");
   const standings = await response.json();
 
-  const standingsTableBody = document.querySelector("#standingsTable tbody");
-  standingsTableBody.innerHTML = "";
+  // Count occurrences of each status
+  const statusCounts = standings.reduce((counts, standing) => {
+    counts[standing.account_status] =
+      (counts[standing.account_status] || 0) + 1;
+    return counts;
+  }, {});
 
-  standings.forEach((standing) => {
-    const row = document.createElement("tr");
+  // Prepare data for the pie chart
+  const labels = Object.keys(statusCounts);
+  const data = Object.values(statusCounts);
 
-    row.innerHTML = `
-      <td>${standing.customer_name}</td>
-      <td>${standing.account_status}</td>
-    `;
-    standingsTableBody.appendChild(row);
-  });
+  const ctx = document.getElementById("customerStandingChart").getContext("2d");
+
+  if (typeof window.customerStandingChart.data !== "undefined") {
+    window.customerStandingChart.data.labels = labels;
+    window.customerStandingChart.data.datasets[0].data = data;
+    window.customerStandingChart.update();
+  } else {
+    window.customerStandingChart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Customer Standing",
+            data: data,
+            backgroundColor: ["#FF6384", "#FFCE56", "#36A2EB"], // Colors for each section
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "top",
+          },
+        },
+      },
+    });
+  }
 };
+
 
 const fetchMonthlyRevenue = async () => {
   const response = await fetch("/monthly_revenue");
@@ -25,7 +54,6 @@ const fetchMonthlyRevenue = async () => {
   );
   monthlyRevenueContainer.innerHTML = "";
   revenueData.forEach((revenue) => {
-    console.log(revenue);
     let section = document.createElement("div");
 
     section.innerHTML = `

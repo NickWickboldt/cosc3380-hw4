@@ -414,10 +414,10 @@ document
         "Stop the simulation? All active calls will be completed. Proceed?"
       );
       if(confirmStop){
+        document.querySelector(".begin-simulation").innerHTML =
+          "Simulation";
         await stopSimulation();
         simulationActive = false;
-        document.querySelector(".begin-simulation").style.innerHTML =
-          "Simulation";
         updateTables();
       }
     } else {

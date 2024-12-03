@@ -11,212 +11,244 @@
     
     <nav class="navbar">
       <div class="nav-container">
-        <h1 class="mainpage-header">Phone Company Dashbaord</h1>
+        <img src="./logo.png" alt="" class="nav-logo">
+        <h1 class="mainpage-header">Phone Company Dashboard</h1>
         <div class="nav-links">
+          <a href="./plan_info.html" class="nav-link">Plan Info</a>
           <a href="#" class="nav-link active-link">Customer Interface</a>
           <a href="./admin-interface.html" class="nav-link">Admin Interface</a>
           <a href="./view-tables.html" class="nav-link">View Tables</a>
         </div>
       </div>
+      
     </nav>
     <div class="init-button-container">
-      <button class="create-tables-button btn">Create Tables</button>
-      <button class="initialize-data btn">Initialize Tables</button>
-      <button style="display:none" class="begin-simulation btn">Simulation</button>
+      <h2>Database Management</h2>
+      <hr>
+      <div>
+        <button class="create-tables-button btn">Create Tables</button>
+        <button class="initialize-data btn">Initialize Tables</button>
+        <button style="display:none" class="begin-simulation btn">Simulation</button>
+      </div>
+
     </div>
     <div class="main-container">
-      <div class="customer-operations-container">
-        <div class="create-customer">
-          <form action="/submit_customer" method="post" id="create-customer-form">
-            <h2>Create Customer</h2>
-            <label for="first_name">First Name:</label><br />
-            <input
-              type="text"
-              id="first_name"
-              name="first_name"
-              required
-            /><br /><br />
+      
+        <div class="customer-operations-container">
+          <div class="create-customer">
+            <form action="/submit_customer" method="post" id="create-customer-form" class="form">
+              <h2>Create Customer</h2>
+              <label for="first_name">First Name:</label>
+              <input
+                type="text"
+                id="first_name"
+                name="first_name"
+                class="input"
+                required
+              />
 
-            <label for="last_name">Last Name:</label><br />
-            <input
-              type="text"
-              id="last_name"
-              name="last_name"
-              required
-            /><br /><br />
+              <label for="last_name">Last Name:</label>
+              <input
+                type="text"
+                id="last_name"
+                name="last_name"
+                class="input"
+                required
+              />
 
-            <label for="email">Email:</label><br />
-            <input type="email" id="email" name="email" required /><br /><br />
+              <label for="email">Email:</label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email"
+                class="input" 
+                required />
 
-            <label for="phone_number">Phone Number:</label><br />
-            <input
-              type="tel"
-              id="phone_number"
-              name="phone_number"
-            /><br /><br />
+              <label for="phone_number">Phone Number:</label>
+              <input
+                type="tel"
+                id="phone_number"
+                name="phone_number"
+                class="input"
+              />
 
-            <label for="account_number">Bank Account Number:</label><br />
-            <input
-              id="account_number"
-              name="account_number"
-            /><br /><br />
+              <label for="account_number">Bank Account Number:</label>
+              <input
+                id="account_number"
+                name="account_number"
+                class="input"
+              />
 
-            <label for="plan_id">Phone Plan:</label><br />
-            <select name="plan_id" id="plan_id" >
-              <option value="1">Basic Plan</option>
-              <option value="2">Unlimited Plan</option>
-              <option value="3">Family Plan</option>
-            </select><br><br>
+              <label for="plan_id">Phone Plan:</label>
+              <select name="plan_id" id="plan_id" class="input">
+                <option value="1">Basic Plan</option>
+                <option value="2">Unlimited Plan</option>
+                <option value="3">Family Plan</option>
+              </select>
 
-            <input type="submit" class="btn" value="Create Customer" />
-            <div id="statusMessage" style="display: none"></div>
-          </form>
-        </div>
-        <div class="update-customer">
-          <form action="/update_customer" method="put" id="update-customer-form">
-            <h2>Update Customer</h2>
-            <label for="update_customer_id">Customer ID:</label><br />
-            <input
-              type="text"
-              id="update_customer_id"
-              name="update_customer_id"
-              required
-            /><br /><br />
+              <input type="submit" class="btn create-customer-btn" value="Create Customer" />
+              <div id="statusMessage" style="display: none"></div>
+            </form>
+          </div>
+          <div class="update-customer">
+            <form action="/update_customer" method="put" id="update-customer-form" class="form">
+              <h2>Update Customer</h2>
+              <label for="update_customer_id">Customer ID:</label>
+              <input
+                type="text"
+                id="update_customer_id"
+                name="update_customer_id"
+                class="input"
+                required
+              />
 
-            <label for="update_first_name">First Name:</label><br />
-            <input
-              type="text"
-              id="update_first_name"
-              name="update_first_name"
-              required
-            /><br /><br />
+              <label for="update_first_name">First Name:</label>
+              <input
+                type="text"
+                id="update_first_name"
+                name="update_first_name"
+                class="input"
+                required
+              />
 
-            <label for="update_last_name">Last Name:</label><br />
-            <input
-              type="text"
-              id="update_last_name"
-              name="update_last_name"
-              required
-            /><br /><br />
+              <label for="update_last_name">Last Name:</label>
+              <input
+                type="text"
+                id="update_last_name"
+                name="update_last_name"
+                class="input"
+                required
+              />
 
-            <label for="update_email">Email:</label><br />
-            <input
-              type="email"
-              id="update_email"
-              name="update_email"
-              required
-            /><br /><br />
+              <label for="update_email">Email:</label>
+              <input
+                type="email"
+                id="update_email"
+                name="update_email"
+                class="input"
+                required
+              />
 
-            <label for="update_phone_number">Phone Number:</label><br />
-            <input
-              type="tel"
-              id="update_phone_number"
-              name="update_phone_number"
-            /><br /><br />
+              <label for="update_phone_number">Phone Number:</label>
+              <input
+                type="tel"
+                id="update_phone_number"
+                name="update_phone_number"
+                class="input"
+              />
 
-            <label for="update_account_number">Bank Account Number:</label><br />
-            <input
-              id="update_account_number"
-              name="update_account_number"
-            /><br /><br />
+              <label for="update_account_number">Bank Account Number:</label>
+              <input
+                id="update_account_number"
+                name="update_account_number"
+                class="input"
+              />
 
-            <label for="update_plan_id">Phone Plan:</label><br />
-            <select name="update_plan_id" id="update_plan_id" >
-              <option value="1">Basic Plan</option>
-              <option value="2">Unlimited Plan</option>
-              <option value="3">Family Plan</option>
-            </select><br><br>
+              <label for="update_plan_id">Phone Plan:</label>
+              <select name="update_plan_id" id="update_plan_id" class="input">
+                <option value="1">Basic Plan</option>
+                <option value="2">Unlimited Plan</option>
+                <option value="3">Family Plan</option>
+              </select>
 
-            <input type="submit" class="btn" value="Update Customer" />
-            <div id="update_statusMessage" style="display: none"></div>
-          </form>
-        </div>
-        <div class="delete-customer">
-          <form action="/delete_customer" method="delete" id="delete-customer-form">
-            <h2>Delete Customer</h2>
-            <label for="delete_customer_id">Customer ID:</label><br />
-            <input
-              type="text"
-              id="delete_customer_id"
-              name="delete_customer_id"
-              required
-            /><br /><br />
+              <input type="submit" class="btn create-customer-btn" value="Update Customer" />
+              <div id="update_statusMessage" style="display: none"></div>
+            </form>
+          </div>
+          <div class="delete-customer">
+            <form action="/delete_customer" method="delete" id="delete-customer-form" class="form"> 
+              <h2>Delete Customer</h2>
+              <label for="delete_customer_id">Customer ID:</label>
+              <input
+                type="text"
+                id="delete_customer_id"
+                name="delete_customer_id"
+                class="input"
+                required
+              />
 
-            <input type="submit" class="btn" value="Delete customer" />
-            <div id="delete_statusMessage" style="display: none"></div>
-          </form>
-        </div>
-        <div class="check-status">
-          <form action="/billing_status" method="get" id="billing-status-form">
-            <h2>Check Billing Status</h2>
-            <label for="billing_status_customer_id">Customer ID:</label><br />
-            <input 
-              type="text"
-              id="billing_status_customer_id"
-              name="billing_status_customer_id"
-              required/>
-            <br /><br />
-            <input type="submit" class="btn" value="Check Status" />
-            <div id="billing_status_statusMessage" style="display: none"></div>
-          </form>
-        </div>
-        <div class="make-payment">
-          <p class="payment-message">To make a payment, first, check your billing status.</p>
-          <form action="/make_payment" method="put" id="make-payment-form" style="display:none">
-            <h2>Make a Payment</h2>
-            <label for="make_payment_customer_id">Customer ID:</label><br />
-            <input 
-              type="text"
-              id="make_payment_customer_id"
-              name="make_payment_customer_id"
-              required/>
-            <br /><br />
-            <label for="make_payment_amount">Amount:</label><br />
-            <input 
-              type="text"
-              id="make_payment_amount"
-              name="make_payment_amount"
-              required/>
-            <br /><br />
-            <label for="make_payment_card_type">Card Type</label><br />
-            <select name="make_payment_card_type" id="make_payment_card_type" >
-              <option value="Credit">Credit</option>
-              <option value="Debit">Debit</option>
-            </select>
-            <br /><br />
-            <label for="make_payment_card_number">Card Number:</label><br />
-            <input 
-              type="text"
-              id="make_payment_card_number"
-              name="make_payment_card_number"
-              required/>
-            <br /><br />
-            <input type="submit" class="btn" value="Submit Payment" />
-            <div id="make_payment_statusMessage" style="display: none"></div>
-          </form>
-        </div>
-        <div class="make-call">
-          <form action="/make_call" method="put" id="make-call-form">
-            <h2>Simulate Call</h2>
-            <label for="make_call_source_number">Source Phone Number:</label><br />
-            <input 
-              type="text"
-              id="make_call_source_number"
-              name="make_call_source_number"
-              required/>
-            <br /><br />
-            <label for="make_call_destination_number">Destination Phone Number:</label><br />
-            <input 
-              type="text"
-              id="make_call_destination_number"
-              name="make_call_destination_number"
-              required/>
-            <br /><br />
-            <input type="submit" class="btn" value="Make Call">
-            <div id="make_call_statusMessage" style="display:none"></div>
-          </form>
-          <button class="make_call_end_call" style="display:none" type="button">End Call</button>
-        </div>
+              <input type="submit" class="btn danger create-customer-btn" value="Delete customer" />
+              <div id="delete_statusMessage" style="display: none"></div>
+            </form>
+          </div>
+          <div class="check-status">
+            <form action="/billing_status" method="get" id="billing-status-form" class="form">
+              <h2>Check Billing Status</h2>
+              <label for="billing_status_customer_id">Customer ID:</label>
+              <input 
+                type="text"
+                id="billing_status_customer_id"
+                name="billing_status_customer_id"
+                class="input"
+                required/>
+              
+              <input type="submit" class="btn create-customer-btn" value="Check Status" />
+              <div id="billing_status_statusMessage" style="display: none"></div>
+            </form>
+          </div>
+          <div class="make-payment">
+            <p class="payment-message">To make a payment, first, check your billing status.</p>
+            <form action="/make_payment" method="put" id="make-payment-form" style="display:none" class="form">
+              <h2>Make a Payment</h2>
+              <label for="make_payment_customer_id">Customer ID:</label>
+              <input 
+                type="text"
+                id="make_payment_customer_id"
+                name="make_payment_customer_id"
+                class="input"
+                required/>
+              
+              <label for="make_payment_amount">Amount:</label>
+              <input 
+                type="text"
+                id="make_payment_amount"
+                name="make_payment_amount"
+                class="input"
+                required/>
+              
+              <label for="make_payment_card_type">Card Type</label>
+              <select name="make_payment_card_type" id="make_payment_card_type" class="input">
+                <option value="Credit">Credit</option>
+                <option value="Debit">Debit</option>
+              </select>
+              
+              <label for="make_payment_card_number">Card Number:</label>
+              <input 
+                type="text"
+                id="make_payment_card_number"
+                name="make_payment_card_number"
+                class="input"
+                required/>
+              
+              <input type="submit" class="btn create-customer-btn" value="Submit Payment" />
+              <div id="make_payment_statusMessage" style="display: none"></div>
+            </form>
+          </div>
+          <div class="make-call">
+            <form action="/make_call" method="put" id="make-call-form" class="form">
+              <h2>Simulate Call</h2>
+              <label for="make_call_source_number">Source Phone Number:</label>
+              <input 
+                type="text"
+                id="make_call_source_number"
+                name="make_call_source_number"
+                class="input"
+                required/>
+              
+              <label for="make_call_destination_number">Destination Phone Number:</label>
+              <input 
+                type="text"
+                id="make_call_destination_number"
+                name="make_call_destination_number"
+                class="input"
+                required/>
+              
+              <input type="submit" class="btn create-customer-btn" value="Make Call">
+              <div id="make_call_statusMessage" style="display:none"></div>
+              <button class="make_call_end_call btn create-customer-btn" style="display:none; margin-top:1vmin;" type="button">End Call</button>
+            </form>
+          </div>
+      </div>
     </div>
   </body>
 </html>
